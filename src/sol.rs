@@ -3,18 +3,6 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-/// This is the leetcode solution to problem 1.
-pub fn two_sum(nums: Vec<i32>, target: i32) -> Vec<i32> {
-    for i in 0..nums.len() {
-        for j in i + 1..nums.len() {
-            if nums[i] + nums[j] == target {
-                return vec![i as i32, j as i32];
-            }
-        }
-    }
-    vec![]
-}
-
 // Definition for singly-linked list.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct ListNode {
@@ -28,6 +16,42 @@ impl ListNode {
     fn new(val: i32) -> Self {
         ListNode { next: None, val }
     }
+}
+
+impl ListNode {
+    pub fn from_vec(arr: &[i32]) -> Option<Box<ListNode>> {
+        let mut head = None;
+        for &val in arr.iter().rev() {
+            let mut temp = ListNode::new(val);
+            temp.next = head;
+            head = Some(Box::new(temp))
+        }
+        head
+    }
+}
+
+impl ListNode {
+    pub fn to_vec(&self) -> Vec<i32> {
+        let mut vect = Vec::new();
+        let mut curr = Some(self);
+        while let Some(node) = curr {
+            vect.push(node.val);
+            curr = self.next.as_deref()
+        }
+        vect
+    }
+}
+
+/// This is the leetcode solution to problem 1.
+pub fn two_sum(nums: Vec<i32>, target: i32) -> Vec<i32> {
+    for i in 0..nums.len() {
+        for j in i + 1..nums.len() {
+            if nums[i] + nums[j] == target {
+                return vec![i as i32, j as i32];
+            }
+        }
+    }
+    vec![]
 }
 
 /// This is the leetcode solution to the problem 2."Add Two Numbers".
@@ -69,7 +93,7 @@ pub fn add_two_numbers(
 }
 
 // Hash maps are needed to facilitate the solution to the problem 3."Longest Substring Without Repeating Characters".
-use std::collections::HashMap;
+use std::{collections::HashMap, i32};
 
 /// This is the leetcode solution to the problem 3."Longest Substring Without Repeating Characters".
 pub fn length_of_longest_substring(s: String) -> i32 {
@@ -541,7 +565,7 @@ pub fn three_sum_closest(nums: Vec<i32>, target: i32) -> i32 {
         }
 
         if nums[i] + nums[p2] + nums[p2 - 1] < closest && closest_diff < 0 {
-            break;
+            continue;
         }
 
         while p1 < p2 {
@@ -743,6 +767,152 @@ pub fn four_sum(nums: Vec<i32>, target: i32) -> Vec<Vec<i32>> {
     res
 }
 
+/// This is the solution to the leetcode problem 19."Remove Nth Node From End of List". 
+/// 
+/// The first implementation is a naive one, which uses a vector to store the values of the linked list, which is time-consuming. The second implementation is more efficient, which uses two pointers to find the target node.
+pub fn remove_nth_from_end_1(head: Option<Box<ListNode>>, n: i32) -> Option<Box<ListNode>> {
+    let mut res = Vec::new();
+    let mut curr = head;
+
+    loop {
+        let Some(node) = &curr else { break; };
+        res.push(node.val);
+        curr = node.next.clone();
+    }
+
+    let mut constructor = None;
+    for (id, &val) in res.iter().rev().enumerate() {
+        if id != n as usize - 1 {
+            println!("This is the {} node, with value {}", id, val);
+            let mut node = ListNode::new(val);
+            node.next = constructor;
+            constructor = Some(Box::new(node));
+        } else {}
+    }
+    constructor
+}
+
+pub fn remove_nth_from_end(head: Option<Box<ListNode>>, n: i32) -> Option<Box<ListNode>> {
+    let mut head = head;
+
+    let mut len = 0;
+    let mut p = head.as_ref();
+
+    while let Some(node) = p {
+        len += 1;
+        p = node.next.as_ref();
+    }
+
+    let target = len - n as usize;
+
+    let nodes = &mut head;
+    let mut curr = nodes;
+    for _ in 0..target {
+        if let Some(node) = curr {
+            curr = &mut node.next;
+        } else {
+            return None;
+        }
+    }
+    if let Some(mut target) = curr.take() {
+        *curr = target.next.take();
+    }
+    head
+}
+
+/// This is the solution to the leetcode problem 20."Valid Parenthesis". 
+pub fn is_valid(s: String) -> bool {
+    let mut p = String::new();
+
+    for c in s.chars() {
+        match c {
+            '(' | '[' | '{' => p.push(c),
+            ')' => {
+                if p.is_empty() {
+                    return false;
+                }
+
+                let ch = p.chars().nth_back(0).unwrap();
+                match ch {
+                    '(' => {
+                        p.pop();
+                    },
+                    '[' | '{' => {
+                        return false;
+                    },
+                    _ => {},
+                }
+            },
+            ']' => {
+                if p.is_empty() {
+                    return false;
+                }
+                
+                let ch = p.chars().nth_back(0).unwrap();
+                match ch {
+                    '[' => {
+                        p.pop();
+                    },
+                    '(' | '{' => {
+                        return false;
+                    },
+                    _ => {},
+                }
+            },
+            '}' => {
+                if p.is_empty() {
+                    return false;
+                }
+                
+                let ch = p.chars().nth_back(0).unwrap();
+                match ch {
+                    '{' => {
+                        p.pop();
+                    },
+                    '[' | '(' => {
+                        return false;
+                    },
+                    _ => {},
+                }
+            },
+            _ => {}
+        }
+    }
+    
+    if p.is_empty() {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/// This is the solution to the leetcode problem 21."Merge Two Sorted Lists".
+pub fn merge_two_lists(list1: Option<Box<ListNode>>, list2: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
+    let (mut list1, mut list2) = (list1, list2);
+    let mut dummy = Box::new(ListNode { val: i32::MAX, next: None });
+    let mut tail = &mut dummy;
+
+    while list1.is_some() && list2.is_some() {
+        let v1 = list1.as_ref().unwrap().val;
+        let v2 = list2.as_ref().unwrap().val;
+
+        if v1 <= v2 {
+            //println!("{} <= {} detected", v1, v2);
+            let mut temp = list1.take();
+            list1 = temp.as_mut().unwrap().next.take();
+            tail.next = temp;
+        } else {
+            //println!("{} > {} detected", v1, v2);
+            let mut temp = list2.take();
+            list2 = temp.as_mut().unwrap().next.take();
+            tail.next = temp;
+        }
+        tail = tail.next.as_mut().unwrap();
+    }
+    tail.next = if list1.is_some() { list1 } else { list2 };
+    dummy.next
+}
+
 #[cfg(test)]
 mod test_modules {
     use super::*;
@@ -815,5 +985,18 @@ mod test_modules {
         let v = vec![0,0,0,1000000000,1000000000,1000000000,1000000000];
         let expected = vec![vec![0,0,0,1000000000]];
         assert_eq!(four_sum(v, 1000000000), expected)
+    }
+
+    #[test]
+    fn test_parenthesis_is_valid() {
+        assert_eq!(is_valid(String::from(")[]{}")), false)
+    }
+
+    #[test]
+    fn test_merge_two_lists() {
+        let l1 = ListNode::from_vec(&[1,2,4]);
+        let l2 = ListNode::from_vec(&[1,3,4]);
+        let a  = ListNode::from_vec(&[1,1,2,3,4,4]);
+        assert_eq!(merge_two_lists(l1, l2), a)
     }
 }
