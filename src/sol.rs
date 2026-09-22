@@ -121,7 +121,7 @@ pub fn add_two_numbers(
 }
 
 // Hash maps are needed to facilitate the solution to the problem 3."Longest Substring Without Repeating Characters".
-use std::{collections::HashMap, i32, result};
+use std::{collections::HashMap};
 
 /// This is the leetcode solution to the problem 3."Longest Substring Without Repeating Characters".
 pub fn length_of_longest_substring(s: String) -> i32 {
@@ -974,7 +974,7 @@ fn generate_parenthesis_recursive(s: String, open: i32, closed: i32, target: &mu
     }
 }
 
-/// This is the solution to the LeetCode problem 22
+/// This is the solution to the LeetCode problem 22."Generate Parentheses". Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
 pub fn generate_parenthesis(n: i32) -> Vec<String> {
     let open = n;
     let closed = n;
@@ -984,6 +984,7 @@ pub fn generate_parenthesis(n: i32) -> Vec<String> {
     res
 }
 
+/// This is the solution to the leetcode problem 23."Merge k Sorted Lists".
 pub fn merge_k_lists(lists: Vec<Option<Box<ListNode>>>) -> Option<Box<ListNode>> {
     let mut original = lists;
     if original.len() == 0 {
@@ -1009,6 +1010,7 @@ pub fn merge_k_lists(lists: Vec<Option<Box<ListNode>>>) -> Option<Box<ListNode>>
     original[0].take()
 }
 
+/// This is the solution to the leetcode problem 24."Swap Nodes in Pairs", which is a special case of the leetcode problem 25."Reverse Nodes in k-Group" with k=2 below.
 pub fn swap_pairs(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
     let mut dummy = Box::new(ListNode {
         val: i32::MAX,
@@ -1042,6 +1044,7 @@ pub fn swap_pairs(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
     dummy.next.take()
 }
 
+/// This is the solution to the leetcode problem 25."Reverse Nodes in k-Group".
 pub fn reverse_k_group(mut head: Option<Box<ListNode>>, k: i32) -> Option<Box<ListNode>> {
     if k <= 1 {
         return head;
@@ -1080,6 +1083,64 @@ pub fn reverse_k_group(mut head: Option<Box<ListNode>>, k: i32) -> Option<Box<Li
     }
 
     result
+}
+
+/// This is the solution to the leetcode problem 26."Remove Duplicates from Sorted Array". This problem needs to be solved in-place, and the return value is the new length of the array after removing duplicates.
+pub fn remove_duplicates(nums: &mut Vec<i32>) -> i32 {
+    if nums.is_empty() {
+        return 0i32;
+    }
+    let mut count = 1usize;
+    
+    for i in 0..nums.len() {
+        if nums[i] != nums[count-1] {
+            nums[count] = nums[i];
+            count += 1;
+        }
+    }
+    count as i32
+}
+/// This is the solution to the leetcode problem 27."Remove Element". This problem needs to be solved in-place, and the return value is the new length of the array after removing the value.
+pub fn remove_element(nums: &mut Vec<i32>, val: i32) -> i32 {
+    if nums.is_empty() {
+        return 0i32;
+    }
+
+    let mut slow = 0usize;
+    let mut fast = 0usize;
+
+    loop {
+        if nums[slow] != val {
+            fast += 1;
+            slow += 1;
+            //println!("No match. Slow +=1, at {}, Fast +=1, at {}. Current: {:?}", slow, fast, nums);
+            if fast == nums.len() {
+                break;
+            }
+        } else {
+            fast += 1;
+            if fast == nums.len() {
+                break;
+            }
+
+            if nums[fast] == val {
+                continue;
+            } else {
+                let temp = nums[fast];
+                nums[fast] = nums[slow];
+                nums[slow] = temp;
+                slow += 1;
+            }
+            //println!("Swapped. Slow at {}, Fast at {}. Current: {:?}", slow, fast, nums)
+        }
+    }
+    slow as i32
+}
+
+/// In fact, the following function might be the most effective solution even without violating the requirements of submission (to problem 27. "remove elements")
+pub fn remove_element_2(nums: &mut Vec<i32>, val: i32) -> i32 {
+    nums.retain(|&x| x != val);
+    return nums.len() as i32;
 }
 
 #[cfg(test)]
@@ -1175,5 +1236,19 @@ mod test_modules {
         let mut vect = Vec::new();
         generate_parenthesis_recursive(s, 1, 3, &mut vect);
         println!("Result: {:?}", vect)
+    }
+
+    #[test]
+    fn notest_remove_element() {
+        let mut vect = vec![1, 1, 5, 4, 4, 6, 3, 5, 8, 7];
+        println!("{}", remove_element_2(&mut vect, 5));
+        println!("Finally: {:?}", vect);
+    }
+
+    #[test]
+    fn compare_remove_element() {
+        let mut vect1 = vec![1, 1, 5, 4, 4, 6, 3, 5, 8, 7];
+        let mut vect2 = vec![1, 1, 5, 4, 4, 6, 3, 5, 8, 7];
+        assert_eq!(remove_element(&mut vect1, 5), remove_element_2(&mut vect2, 5))
     }
 }
