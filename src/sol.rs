@@ -1091,9 +1091,9 @@ pub fn remove_duplicates(nums: &mut Vec<i32>) -> i32 {
         return 0i32;
     }
     let mut count = 1usize;
-    
+
     for i in 0..nums.len() {
-        if nums[i] != nums[count-1] {
+        if nums[i] != nums[count - 1] {
             nums[count] = nums[i];
             count += 1;
         }
@@ -1142,6 +1142,147 @@ pub fn remove_element_2(nums: &mut Vec<i32>, val: i32) -> i32 {
     nums.retain(|&x| x != val);
     return nums.len() as i32;
 }
+
+/// Solution to leetcode 29. divide two integers, which is required to be implemented without using multiplication, division and modular operator.
+pub fn divide(dividend: i32, divisor: i32) -> i32 {
+    if dividend == 0 {
+        return 0;
+    } else if dividend == divisor {
+        return 1;
+    } else if dividend == i32::MIN && divisor == -1 {
+        return i32::MAX;
+    }
+
+    let flag: bool;
+    if dividend < 0 && divisor > 0 {
+        flag = false;
+    } else if dividend > 0 && divisor < 0 {
+        flag = false;
+    } else {
+        flag = true;
+    }
+
+    let mut d1 = dividend.unsigned_abs();
+    let d2 = divisor.unsigned_abs();
+
+    let mut res = 0i32;
+
+    for i in 31..-1 as i8 {
+        if d1 >= (d2 << i) {
+            res += 1 << i;
+            d1 -= d2 << i;
+        }
+    }
+
+    return if flag { res } else { -res };
+}
+
+/// Solution to leetcode 28. "Find the index of the first occurrence in a string"
+pub fn str_str(haystack: String, needle: String) -> i32 {
+    let n = needle.len();
+    let n_start = needle.chars().nth(0).unwrap();
+    if haystack.len() < n {
+        return -1;
+    }
+
+    for (id, c) in haystack.char_indices() {
+        if c == n_start {
+            if id > haystack.len() - needle.len() {
+                return -1;
+            }
+            if &haystack[id..(id+n)] == needle {
+                return id as i32;
+            }
+        }
+    }
+    -1
+}
+
+/// Solution to the problem 30. "substring with concatenation of all words".
+pub fn find_substring(s: String, words: Vec<String>) -> Vec<i32> {
+    let len_words = words.len();
+    let mut result = Vec::new();
+    let mut reference: HashMap<String, i32> = HashMap::new();
+    let n = words[0].len();
+
+    if n > s.len() {
+        return result;
+    }
+
+    for it in words.into_iter() {
+        if let Some(c) = reference.get_mut(&it) {
+            *c += 1;
+        } else {
+            reference.insert(it, 1);
+        }
+    }
+
+    for offsets in 0..n {
+        let mut window = 0;
+        let mut record: HashMap<String, i32> = HashMap::new();
+
+        let mut l = offsets;
+        loop {
+            let curr = String::from(&s[l..(l+n)]);
+            
+            let referred = reference.get(&curr);
+            if referred.is_none() {
+                record.clear();
+                l += n;
+                window = 0;
+                //println!("No match, continue. window={}", window);
+                if l + n > s.len() {
+                    break;
+                }
+                continue;
+            }
+            let inner = *(referred.unwrap());
+            //println!("Matched, currs {} with {}", inner, curr);
+            
+            let recorded = record.get_mut(&curr);
+            if recorded.is_none() {
+                //println!("Add {} to record", curr);
+                window += 1;
+                record.insert(curr, 1);
+            } else {
+                let recorded_inner = recorded.unwrap();
+                *recorded_inner += 1;
+                window += 1;
+                //print!("Update {} Record, now {}, target {}", curr, *recorded_inner, inner);
+                //println!("window size = {}", window);
+                let mut start = l - (window-1)*n;
+                loop {
+                    if *(record.get_mut(&curr).unwrap()) <= inner {
+                        break;
+                    }
+                    let prev = String::from(&s[start..(start+n)]);
+                    let prev_count = record.get_mut(&prev).unwrap();
+
+                    //println!("start = {}, prev = {}", start, prev);
+                    *prev_count -= 1;
+                    
+                    window -= 1;
+                    start += n;
+                    //println!("backwards, start = {}, window = {}", start, window);
+                    if window == 0 {
+                        record.clear();
+                        break;
+                    }
+                }
+
+            }
+            if window == len_words {
+                result.push((l - (window - 1)*n) as i32);
+            }
+            l += n;
+            if l + n > s.len() {
+                break;
+            }
+        }
+    }
+    result
+}
+
 
 #[cfg(test)]
 mod test_modules {
@@ -1249,6 +1390,47 @@ mod test_modules {
     fn compare_remove_element() {
         let mut vect1 = vec![1, 1, 5, 4, 4, 6, 3, 5, 8, 7];
         let mut vect2 = vec![1, 1, 5, 4, 4, 6, 3, 5, 8, 7];
-        assert_eq!(remove_element(&mut vect1, 5), remove_element_2(&mut vect2, 5))
+        assert_eq!(
+            remove_element(&mut vect1, 5),
+            remove_element_2(&mut vect2, 5)
+        )
+    }
+
+    #[test]
+    fn test_divide_edge_condition() {
+        assert_eq!(i32::MIN / 2, divide(i32::MIN, 2))
+    }
+
+    #[test]
+    fn test_divide() {
+        assert_eq!(40, divide(81, 2))
+    }
+
+    #[test]
+    fn notest_str_str_1() {
+        println!("{}", str_str("aabaaabaaac".into(), "aabaaac".into()))
+    }
+
+    #[test]
+    fn notest_str_str() {
+        println!("{}", str_str("mississippi".into(), "sipp".into()))
+    }
+
+    #[test]
+    fn test_find_substrings() {
+        let expected = vec![8];
+        assert_eq!(find_substring("wordgoodgoodgoodbestword".into(), vec!["word".into(), "good".into(), "best".into(), "good".into()]), expected)
+    }
+
+    #[test]
+    fn test_find_substrings_boundary() {
+        let expected = vec![0];
+        assert_eq!(find_substring("a".into(), vec!["a".into()]), expected)
+    }
+
+    #[test]
+    fn noname() {
+        let s = String::from("s");
+        print!("{}", &s[0..1])
     }
 }
