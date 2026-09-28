@@ -1283,6 +1283,111 @@ pub fn find_substring(s: String, words: Vec<String>) -> Vec<i32> {
     result
 }
 
+/// The solution to the leetcode problem 31."Next Permutation". Implement next permutation, which rearranges numbers into the lexicographically next greater permutation of numbers. If such an arrangement is not possible, it must rearrange it as the lowest possible order (i.e., sorted in ascending order). 
+/// 
+/// The replacement must be in place and use only constant extra memory.
+pub fn next_permutation(nums: &mut Vec<i32>) {
+    let n = nums.len();
+    let mut i = n-1;
+    while i > 0 && nums[i-1] >= nums[i] {
+        i -= 1;
+    }
+
+    if i == 0 {
+        nums.reverse();
+    } else if i == n-1 {
+        nums.swap(n-1, n-2);
+    } else {
+        let mut j = n-1;
+        while j >= i && nums[j] <= nums[i-1] {
+            j -= 1;
+        }
+        nums.swap(j, i-1);
+        let to_reverse = &mut nums[i..];
+        to_reverse.reverse();
+    }
+}
+
+/// This is the solution to the leetcode problem 32."Longest Valid Parentheses". 
+pub fn longest_valid_parentheses(s: String) -> i32 {
+    let (mut fast, mut slow, mut l) = (0usize, 0usize, 0usize);
+    for c in s.chars() {
+        if c == '(' {
+            fast += 1;
+        } else {
+            slow += 1
+        }
+        if fast == slow {
+            l = std::cmp::max(l, 2*slow)
+        } else if slow > fast{
+            fast = 0;
+            slow = 0
+        }
+    }
+    let stored = fast - slow;
+    fast = 0;
+    slow = 0;
+    for rc in s.chars().rev() {
+        if rc == '(' {
+            fast += 1
+        } else {
+            slow += 1
+        }
+        if fast > slow {
+            fast = 0;
+            slow = 0;
+        } else if fast == slow {
+            l = std::cmp::max(l, 2*fast);
+            break;
+        }
+    }
+    l as i32
+}
+
+/// The solution to the leetcode problem 33."Search in Rotated Sorted Array". 
+/// 
+/// Suppose an array sorted in ascending order is rotated at some pivot unknown to you beforehand. (i.e., [0,1,2,4,5,6,7] might become [4,5,6,7,0,1,2]). You are given a target value to search. If found in the array return its index, otherwise return -1. 
+/// 
+/// You may assume no duplicate exists in the array. Your algorithm's runtime complexity must be in the order of O(log n).
+pub fn search(nums: Vec<i32>, target: i32) -> i32 {
+    let (mut start, mut end) = (0, nums.len()-1);
+    while start <= end {
+        let midterm = (start + end) / 2;
+        println!("Looking in the indices ({}+{})/2={}", start, end, midterm);
+        if start == midterm || end == midterm {
+            if nums[midterm] == target {
+                return midterm as i32;
+            } else {
+                if midterm + 1 >= nums.len() {
+                    return -1;
+                } else {
+                    if nums[midterm+1] == target {
+                        return (midterm+1) as i32;
+                    }
+                    return -1;
+                }
+            }
+        }
+        if nums[midterm] == target {
+            return midterm as i32;
+        }
+        if nums[start] < nums[midterm] {
+            if nums[start] <= target && nums[midterm] > target {
+                end = midterm -1
+            } else {
+                start = midterm +1
+            }
+        } else {
+            if nums[midterm] < target && nums[end] >= target {
+                start = midterm +1
+            } else {
+                end = midterm -1
+            }
+        }
+        println!("Start = {}, End = {}", start, end);
+    }
+    return -1;
+}
 
 #[cfg(test)]
 mod test_modules {
@@ -1429,8 +1534,40 @@ mod test_modules {
     }
 
     #[test]
-    fn noname() {
-        let s = String::from("s");
-        print!("{}", &s[0..1])
+    fn test_search() {
+        let vect = vec![1, 3];
+        assert_eq!(search(vect, 3), 1)
+    }
+
+    #[test]
+    fn test_search_2() {
+        let vect = vec![1, 3];
+        assert_eq!(search(vect, 4), -1)
+    }
+}
+
+#[cfg(test)]
+mod test_longest_valid_parenthesis_dedicated {
+    use super::*;
+
+    #[test]
+    fn test_longest_valid_parenthesis_1() {
+        let s = String::from(")(()())");
+        assert_eq!(longest_valid_parentheses(s), 6)
+    }
+    #[test]
+    fn test_longest_valid_parenthesis_2() {
+        let s = String::from("(()(()()())))))");
+        assert_eq!(longest_valid_parentheses(s), 12)
+    }
+    #[test]
+    fn test_longest_valid_parenthesis_3() {
+        let s = String::from(")))()((()()()");
+        assert_eq!(longest_valid_parentheses(s), 6)
+    }
+    #[test]
+    fn test_longest_valid_parenthesis_4() {
+        let s = String::from("(()(((()");
+        assert_eq!(longest_valid_parentheses(s), 2)
     }
 }
