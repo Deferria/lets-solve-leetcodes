@@ -1389,9 +1389,82 @@ pub fn search(nums: Vec<i32>, target: i32) -> i32 {
     return -1;
 }
 
+/// This is the solution to the leetcode problem 34."Find First and Last Position of Element in Sorted Array". Given an array of integers nums sorted in ascending order, find the starting and ending position of a given target value. If target is not found in the array, return [-1, -1]. 
+/// 
+/// You must write an algorithm with O(log n) runtime complexity.
+pub fn search_range(nums: Vec<i32>, target: i32) -> Vec<i32> {
+    // If list is empty, impossible to find any position
+    if nums.is_empty() {
+        return vec![-1, -1];
+    }
+    let n = nums.len();
+    // Tackle the boundary:
+    // If target is out of range, impossible to find it in the list
+    if target > nums[n-1] || target < nums[0] {
+        return vec![-1, -1];
+    }
+    let (mut p1, mut p2) = (0usize, n-1);
+    if nums[p1] != target {
+        while p1 <= p2 {
+            let mid = (p1 + p2) / 2;
+            //println!("Looking in the indices: {}+{} / 2 = {}", p1, p2, mid);
+            if nums[mid] < target {
+                p1 = mid + 1;
+            } else {
+                p2 = mid - 1;
+            }
+        }
+    } else {}
+    let p1_frozen = p1;
+    (p1, p2) = (0usize, n-1);
+    if nums[p2] != target {
+        while p1 <= p2 {
+            let mid = (p1 + p2) / 2;
+            //println!("Looking in the indices: {}+{} / 2 = {}", p1, p2, mid);
+            if nums[mid] > target {
+                p2 = mid - 1;
+            } else {
+                p1 = mid + 1;
+            }
+        }
+    } else {}
+    if nums[p1_frozen] == target && nums[p2] == target {
+        return vec![p1_frozen as i32, p2 as i32];
+    } else {
+        return vec![-1, -1];
+    }
+}
+
+/// This is the solution to the leetcode problem 35."Search Insert Position". Given a sorted array and a target value, return the index if the target is found. If not, return the index where it would be if it were inserted in order. You may assume no duplicates in the array.
+/// 
+/// You must write an algorithm with O(log n) runtime complexity.
+pub fn search_insert(nums: Vec<i32>, target: i32) -> i32 {
+    let n = nums.len();
+    if nums[0] >= target {
+        return 0;
+    }
+    if nums[n-1] == target {
+        return (n-1) as i32;
+    } else if nums[n-1] < target {
+        return n as i32;
+    }
+    let (mut p1, mut p2) = (0usize, n-1);
+    while p1 <= p2 {
+        let mid = (p1 + p2) / 2;
+        if nums[mid] < target {
+            p1 = mid + 1;
+        } else {
+            p2 = mid - 1;
+        }
+    }
+    p1 as i32
+}
+
 #[cfg(test)]
 mod test_modules {
-    use super::*;
+    use std::vec;
+
+use super::*;
 
     #[test]
     fn test_max_area() {
@@ -1543,6 +1616,24 @@ mod test_modules {
     fn test_search_2() {
         let vect = vec![1, 3];
         assert_eq!(search(vect, 4), -1)
+    }
+
+    #[test]
+    fn test_search_range() {
+        let vect = vec![1,2,3,3,3,3,3,3,3,3,3,4,5,5];
+        assert_eq!(search_range(vect, 3), vec![2, 10])
+    }
+
+    #[test]
+    fn test_search_range_2() {
+        let vect = vec![1, 1, 1, 1, 1, 2];
+        assert_eq!(search_range(vect, 2), vec![5, 5])
+    }
+
+    #[test]
+    fn test_search_insert() {
+        let vect = vec![1,3];
+        assert_eq!(search_insert(vect, 3), 1)
     }
 }
 
