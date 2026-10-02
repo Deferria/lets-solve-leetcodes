@@ -226,7 +226,7 @@ mod tests {
 
     #[test]
     fn test_translate_rna_to_protein() {
-        let rna = "AACAUGUUUUCGUACGGUGGCAACACGUAA";
+        let rna = "ACAUGUUUUCGUACGGUGGCAACACGU";
         let protein = translate_rna_to_protein(rna);
         println!("Protein: {:?}", protein);
         //assert_eq!(protein, vec![AminoFromCodon::Met, AminoFromCodon::Phe]);
