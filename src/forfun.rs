@@ -1,3 +1,9 @@
+//! This is a fun project to **translate RNA sequences into protein sequences**. 
+//! 
+//! The RNA sequence is represented as a string of characters, where each character represents a base (A, C, G, U). The protein sequence is represented as a vector of amino acids, where each amino acid is represented as an enum variant.
+//! 
+//! Now we implement the translation of RNA sequences into protein sequences. The translation is done by first converting the RNA sequence into codons (groups of three bases), and then converting each codon into an amino acid. The translation starts at the first start codon (AUG / GUG) and ends at the first stop codon (UAA, UAG, UGA).
+
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
@@ -200,7 +206,7 @@ fn codons_to_amino(codons: Vec<Codon>) -> Vec<AminoFromCodon> {
     let mut aminos = Vec::new();
     let mut beginning = false;
     for c in codons.iter() {
-        if *c == Codon::from_base(Base::A, Base::U, Base::G) {
+        if *c == Codon::from_base(Base::A, Base::U, Base::G) || *c == Codon::from_base(Base::G, Base::U, Base::G) {
             aminos.push(AminoFromCodon::Met);
             beginning = true;
         } else if beginning {

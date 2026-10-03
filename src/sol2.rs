@@ -2,6 +2,9 @@
 
 use std::collections::HashMap;
 
+/// This is the solution to the leetcode problem 36."Valid Sudoku". Determine if a 9x9 Sudoku board is valid. Only the filled cells need to be validated.
+/// 
+/// We use HashMaps to record the number of times a character appears in each row, column, and cell. If any character appears more than once in any row, column, or cell, return false. Otherwise, return true.
 pub fn is_valid_sudoku(board: Vec<Vec<char>>) -> bool {
     let mut r: HashMap<char, u8> = HashMap::with_capacity(9);
     assert_eq!(board.len(), 9);
@@ -82,6 +85,9 @@ pub fn is_valid_sudoku(board: Vec<Vec<char>>) -> bool {
     true
 }
 
+/// This is the solution to the leetcode problem 37."Sudoku Solver". Write a program to solve a Sudoku puzzle by filling the empty cells. 
+/// 
+/// In fact, there are no efficient algorithms to solve it. We can only use the brute-force algorithm to solve it. 
 pub fn solve_sudoku(board: &mut Vec<Vec<char>>) {
     fn is_safe(board: &mut Vec<Vec<char>>, row: usize, col:usize, value: char) -> bool {
         for i in 0..9usize {
@@ -130,7 +136,7 @@ pub fn solve_sudoku(board: &mut Vec<Vec<char>>) {
     solve_sudoku_meta(board, 0, 0);
 }
 
-
+/// Another implementation of the Sudoku Solver. This implementation is less efficient than the previous one.
 pub fn solve_sudoku_2(board: &mut Vec<Vec<char>>) {
     fn is_safe(board: &mut Vec<Vec<char>>, row: usize, col:usize, value: char) -> bool {
         for i in 0..9usize {
