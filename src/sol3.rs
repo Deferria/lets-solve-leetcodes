@@ -1,4 +1,5 @@
 use std::collections::VecDeque;
+use std::collections::HashMap;
 
 /// This is the solution to the leetcode problem 38."Count and Say".
 pub fn count_and_say(n: i32) -> String {
@@ -334,6 +335,9 @@ pub fn permute_2(mut nums: Vec<i32>) -> Vec<Vec<i32>> {
     ans
 }
 
+/// This is the solution to LeetCode Problem 48. "Rotate Image". You are given an n x n 2D matrix representing an image, rotate the image by 90 degrees (clockwise).
+/// 
+/// The rotation must be done in-place, which means you have to modify the input 2D matrix directly. Allocating another 2D matrix space is not allowed.
 pub fn rotate(matrix: &mut Vec<Vec<i32>>) {
     let n = matrix.len();
     for j in 0..(n/2) {
@@ -345,6 +349,149 @@ pub fn rotate(matrix: &mut Vec<Vec<i32>>) {
             matrix[i][n-j-1] = temp;
         }
     }
+}
+
+/// This is the solution to LeetCode Problem 49. "Group Anagrams". Given an array of strings strs, group the anagrams together. 
+pub fn group_anagrams(strs: Vec<String>) -> Vec<Vec<String>> {
+    let mut archived: HashMap<String, Vec<String>> = HashMap::new();
+    for w in strs.into_iter() {
+        let mut temp: Vec<char> = w.chars().collect();
+        temp.sort();
+        let sorted: String = temp.into_iter().collect();
+        archived.entry(sorted).or_insert(Vec::new()).push(w);
+    }
+    let mut ans = Vec::new();
+    for i in archived.into_values() {
+        ans.push(i);
+    }
+    ans
+}
+
+/// Another solution to LeetCode Problem 49. "Group Anagrams". 
+/// 
+/// To represent a string uniquely, <b>we can use the product of prime numbers</b>. This is legal because $\mathbb{Z}$ is a UFD (Unique Factorization Domain). 
+/// BigInt library is used to avoid overflow.
+pub fn group_anagrams_2(strs: Vec<String>) -> Vec<Vec<String>> {
+    const PRIMES : [u128; 26] = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101];
+    let mut archived: HashMap<u128, Vec<String>> = HashMap::new();
+    for w in strs.into_iter() {
+        let mut prod = 1;
+        for c in w.chars() {
+            let p = PRIMES[(c as u8 - 'a' as u8) as usize];
+            prod *= p;
+        }
+        archived.entry(prod).or_insert(Vec::new()).push(w);
+    }
+    let mut ans = Vec::new();
+    for i in archived.into_values() {
+        ans.push(i);
+    }
+    ans
+}
+
+/// This is the solution to LeetCode Problem 50. "Pow(x, n)". Implement pow(x, n), which calculates x raised to the power n (i.e., x^n). 
+/// 
+/// The algorithm uses the fast exponentiation method, which reduces the time complexity to O(log n) by squaring the base and halving the exponent at each step. (Divide and Conquer)
+pub fn my_pow(x: f64, n: i32) -> f64 {
+    if x == 0f64 {
+        return 0f64;
+    }
+    if x == 1f64 {
+        return 1f64;
+    }
+    if n == 0 {
+        return 1f64;
+    }
+
+    let mut q;
+    if n == i32::MIN {
+        q = u32::MAX / 2 + 1;
+    } else {
+        q = n.abs() as u32;
+    }
+
+    let mut pow_prev = x;
+    let mut ans = 1f64;
+
+    loop {
+        let remainder = q % 2;
+        q /= 2;
+        match remainder {
+            1 => {
+                ans *= pow_prev;
+            },
+            0 => {},
+            _ => {}
+        };
+        pow_prev *= pow_prev;
+
+        if q == 0 {
+            break;
+        }
+    }
+
+    if n < 0 {
+        return 1f64 / ans;
+    }
+    ans
+}
+
+/// This is the solution to LeetCode Problem 53. "Maximum Subarray". Given an integer array nums, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.
+/// 
+/// This solution uses dynamic programming.
+pub fn max_sub_array(nums: Vec<i32>) -> i32 {
+    let n = nums.len();
+    let mut dp = vec![nums[0]; n];
+    let mut curr = vec![nums[0]; n];
+
+    for i in 1..n {
+        curr[i] = std::cmp::max(nums[i], curr[i-1]+nums[i]);
+        dp[i] = std::cmp::max(curr[i], dp[i-1]);
+    }
+    return dp[n-1];
+}
+
+/// This is the solution to LeetCode Problem 51. "N-Queens". 
+/// 
+/// This solution uses backtracking to place queens on the board. It maintains three state vectors to track which columns and diagonals are occupied, allowing it to efficiently check for valid placements.
+pub fn solve_n_queens(n: i32) -> Vec<Vec<String>> {
+    let mut col_state = vec![true; n as usize];
+    let mut diag1_state = vec![true; (n*2-1) as usize];
+    let mut diag2_state = diag1_state.clone();
+    let mut row = vec![0; n as usize];
+
+    fn placing_queen(k: usize, n: usize, row: &mut Vec<usize>, col: &mut Vec<bool>, diag1: &mut Vec<bool>, diag2: &mut Vec<bool>, receiver: &mut Vec<Vec<String>>) {
+        for i in 0..n {
+            if col[i] && diag1[k+i] && diag2[n+k-i-1] {
+                row[k] = i;
+                (col[i], diag1[k+i], diag2[n+k-i-1]) = (false, false, false);
+                //println!("Attempting k={k}, i={i}");
+                if k == n-1 {
+                    let mut one_answer = Vec::with_capacity(n);
+                    //println!("Feasible Solution: {:?}", row);
+                    for j in row.iter() {
+                        let mut temp = String::new();
+                        for i in 0..n {
+                            if i == *j {
+                                temp.push('Q');
+                            } else {
+                                temp.push('.');
+                            }
+                        }
+                        one_answer.push(temp);
+                    }
+                    //println!("Feasible Solution: {:?}", one_answer);
+                    receiver.push(one_answer);
+                } else {
+                    placing_queen(k+1, n, row, col, diag1, diag2, receiver);
+                }
+                (col[i], diag1[k+i], diag2[n+k-i-1]) = (true, true, true);
+            }
+        }
+    }
+    let mut ans = Vec::new();
+    placing_queen(0, n as usize, &mut row, &mut col_state, &mut diag1_state, &mut diag2_state, &mut ans);
+    ans
 }
 
 #[cfg(test)]
@@ -394,5 +541,32 @@ mod test_modules {
     fn notest_permute_2() {
         let v = vec![1, 1, 2];
         println!("{:?}", permute(v));
+    }
+
+    #[test]
+    fn test_my_pow() {
+        assert_eq!(my_pow(2.10000, 3), 9.26100);
+    }
+
+    #[test]
+    fn test_my_pow_2() {
+        assert_eq!(my_pow(-0.9999999977729145, -2055188322), 97.23008);
+    }
+
+    #[test]
+    fn test_max_sub_array() {
+        let vect = vec![-2,1,-3,4,-1,2,1,-5,4];
+        assert_eq!(max_sub_array(vect), 6);
+    }
+
+    #[test]
+    fn test_max_sub_array_2() {
+        let vect = vec![-2,-3,2,-4,6,2,-13,2,-4,6,2,-9,-1];
+        assert_eq!(max_sub_array(vect), 8);
+    }
+
+    #[test]
+    fn notest() {
+        solve_n_queens(4);
     }
 }
