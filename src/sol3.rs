@@ -494,6 +494,34 @@ pub fn solve_n_queens(n: i32) -> Vec<Vec<String>> {
     ans
 }
 
+/// This is the solution to LeetCode Problem 52. "N-Queens II".
+/// 
+/// The same approach as previous.
+pub fn total_n_queens(n: i32) -> i32 {
+    let mut col_state = vec![true; n as usize];
+    let mut diag1_state = vec![true; (n*2-1) as usize];
+    let mut diag2_state = diag1_state.clone();
+    let mut row = vec![0; n as usize];
+
+    fn placing_queen(k: usize, n: usize, row: &mut Vec<usize>, col: &mut Vec<bool>, diag1: &mut Vec<bool>, diag2: &mut Vec<bool>, receiver: &mut i32) {
+        for i in 0..n {
+            if col[i] && diag1[k+i] && diag2[n+k-i-1] {
+                row[k] = i;
+                (col[i], diag1[k+i], diag2[n+k-i-1]) = (false, false, false);
+                if k == n-1 {
+                    *receiver += 1;
+                } else {
+                    placing_queen(k+1, n, row, col, diag1, diag2, receiver);
+                }
+                (col[i], diag1[k+i], diag2[n+k-i-1]) = (true, true, true);
+            }
+        }
+    }
+    let mut ans = 0;
+    placing_queen(0, n as usize, &mut row, &mut col_state, &mut diag1_state, &mut diag2_state, &mut ans);
+    ans
+}
+
 #[cfg(test)]
 mod test_modules {
     use super::*;
@@ -567,6 +595,9 @@ mod test_modules {
 
     #[test]
     fn notest() {
-        solve_n_queens(4);
+        let test_list = [1, 2, 3, 4 ,5, 6, 7, 8, 9];
+        for i in test_list {
+            println!("{}", total_n_queens(i));
+        }
     }
 }
