@@ -198,6 +198,213 @@ pub fn generate_matrix(n: i32) -> Vec<Vec<i32>> {
     protoans
 }
 
+/// This is the solution to LeetCode Problem 60. "Permutation Sequence". 
+pub fn get_permutation(n: i32, k: i32) -> String {
+    let mut n_fact = 1;
+    let mut candid = Vec::with_capacity(n as usize);
+    for i in 0..n {
+        n_fact *= i+1;
+        candid.push((i+1) as u8);
+    }
+    let mut ans = String::new();
+    let mut ind = n;
+    let mut start = k - 1;
+    while ind > 0 {
+        n_fact /= ind;
+        let q = start / n_fact;
+        let temp = candid.remove(q as usize);
+        let temp_char = (temp + '0' as u8) as char;
+        ans.push(temp_char);
+        ind -= 1;
+        start = start % n_fact;
+    }
+    ans
+}
+
+/// This is the solution to LeetCode Problem 62. "Unique Paths". Dynamic Programming is used.
+pub fn unique_paths(m: i32, n: i32) -> i32 {
+    let (m, n) = (m as usize, n as usize);
+    let mut dp = Vec::with_capacity(m);
+    for _ in 0..m {
+        if dp.is_empty() {
+            dp.push(vec![1; n]);
+        }
+        let mut temp = vec![i32::MAX; n];
+        temp[0] = 1;
+        dp.push(temp.clone());
+    }
+    for i in 1..m {
+        for j in 1..n {
+            dp[i][j] = dp[i-1][j] + dp[i][j-1]
+        }
+    }
+    dp[m-1][n-1]
+}
+
+/// This is the solution to LeetCode Problem 63. "Unique Paths II". The difference is that some cells are marked as obstacles, and you cannot pass through them. 
+/// 
+///  Dynamic Programming is used. The function fills in the 2D DP table from [0][0] to [m-1][n-1]. When meeting an obstacle, the number falls back to 0 and continue.
+pub fn unique_paths_with_obstacles(mut obstacle_grid: Vec<Vec<i32>>) -> i32 {
+    let (m, n) = (obstacle_grid.len(), obstacle_grid[0].len());
+    if obstacle_grid[0][0] == 1 || obstacle_grid[m-1][n-1] == 1 {
+        return 0;
+    }
+    for it in obstacle_grid.iter_mut() {
+        it.reverse();
+    }
+    obstacle_grid.reverse();
+    let mut dp = Vec::with_capacity(m);
+    for _ in 0..m {
+        dp.push(vec![i32::MIN; n])
+    }
+    println!("{:?}", dp);
+    for i in 0..m {
+        for j in 0..n {
+            if i == 0 && j == 0 {
+                dp[i][j] = 1
+            } else if i > 0 && j == 0 {
+                dp[i][j] = dp[i-1][j];
+            } else if i == 0 && j > 0 {
+                dp[i][j] = dp[i][j-1];
+            } else {
+                dp[i][j] = dp[i][j-1] + dp[i-1][j]
+            }
+
+            if obstacle_grid[i][j] == 1 {
+                dp[i][j] = 0;
+            }
+        }
+    }
+    println!("{:?}", dp);
+    dp[m-1][n-1]
+}
+
+/// This is the solution to LeetCode Problem 64. "Minimum Path Sum". The function calculates the minimum path sum from the top-left corner to the bottom-right corner of a grid filled with non-negative numbers. You can only move either down or right at any point in time.
+/// 
+/// The function fills in the 2D DP table from [m-1][n-1] to [0][0]. In this problem, we directly modify the original grid to save space.
+pub fn min_path_sum(mut grid: Vec<Vec<i32>>) -> i32 {
+    let (m, n) = (grid.len(), grid[0].len());
+    for i in 0..m {
+        for j in 0..n {
+            if i == 0 && j == 0 {}
+            else if i == 0 && j > 0 {
+                grid[m-1-i][n-1-j] += grid[m-1-i][n-j];
+            } else if i > 0 && j == 0 {
+                grid[m-1-i][n-1-j] += grid[m-i][n-j-1];
+            } else {
+                grid[m-1-i][n-1-j] += std::cmp::min(grid[m-i][n-1-j], grid[m-1-i][n-j]);
+            }
+        }
+    }
+    grid[0][0]
+}
+
+/// This is the older implementation of the solution to LeetCode Problem 64. "Minimum Path Sum". 
+/// 
+/// This solution fills in the 2D DP table from [0][0] to [m-1][n-1] (in-place). Thus, we first reverse the grid recursively.
+pub fn min_path_sum_2(mut grid: Vec<Vec<i32>>) -> i32 {
+    let (m, n) = (grid.len(), grid[0].len());
+    for it in grid.iter_mut() {
+        it.reverse();
+    }
+    grid.reverse();
+    for i in 0..m {
+        for j in 0..n {
+            if i == 0 && j == 0 {}
+            else if i == 0 && j > 0 {
+                grid[i][j] += grid[i][j-1];
+            } else if i > 0 && j == 0 {
+                grid[i][j] += grid[i-1][j];
+            } else {
+                grid[i][j] += std::cmp::min(grid[i-1][j], grid[i][j-1]);
+            }
+        }
+    }
+    //println!("Grid is\n{:?}", grid);
+    grid[m-1][n-1]
+}
+
+/// This is the solution to LeetCode Problem 65. "Valid Number". The function checks if a given string can be interpreted as a valid decimal number.
+pub fn is_number(s: String) -> bool {
+    // 1. the leading pattern 
+    let mut cs = s.chars();
+    if let Some(ch) = cs.next() {
+        if ch.is_ascii_digit() {} // If the first char is a digit, we are good to go
+        else if ch == '.' {
+            if let Some(nch) = cs.next() { // If the first char is a dot, the next char must be a digit
+                if !nch.is_ascii_digit() {
+                    return false;
+                }
+            } else { // When no next char following the dot, it is not a valid number
+                return false;
+            }
+        }
+        else if ch == '+' || ch == '-' {
+            if let Some(nch) = cs.next() {
+                if !nch.is_ascii_digit() && nch != '.' { // Signs must be followed by a digit or a dot
+                    return false;
+                } else if nch == '.' { // The dot pattern as above (must be followed by a digit)
+                    if let Some(nnch) = cs.next() {
+                        if !nnch.is_ascii_digit() {
+                            return false;
+                        } else {}
+                    } else {
+                        return false;
+                    }
+                }
+            } else { // Only a sign without any following char is not a valid number
+                return false;
+            }
+        } else { // If the first char is neither a digit, nor a dot, nor a sign, it is not a valid number
+            return false;
+        }
+    }
+    // 2. special chars
+    let (mut dot_c, mut e_c, mut sign_c) = (0, 0, 0);
+    let (mut dot_p, mut e_p, mut sign_p) = (usize::MAX, usize::MAX, usize::MAX);
+    for (id, i) in s.char_indices() {
+        if i == '.' {
+            dot_c += 1;
+            dot_p = id;
+        } else if i.to_lowercase().to_string() == "e" {
+            e_c += 1;
+            e_p = id;
+        } else if i.is_ascii_digit() {}
+        else if i == '+' || i == '-' {
+            sign_c += 1;
+            sign_p = id;
+        } else {
+            return false; // Any other char is not allowed
+        }
+
+        if dot_c > 1 || e_c > 1 || sign_c > 2 { // #dots at most 1, #exps at most 1, #signs at most 2 (leading and after exp)
+            return false;
+        }
+    }
+    if e_c == 0 && sign_c > 1 { // when no exps, #signs at most 1
+        return false;
+    }
+    // 3. positions
+    let n = s.len();
+    if e_p == 0 || e_p == n-1 { // exp is not allowed to be leading or tailing
+        return false;
+    }
+    if e_p != usize::MAX && dot_p != usize::MAX && e_p < dot_p { // dot is not allowed to be after exp
+        return false;
+    }
+    if sign_p != usize::MAX { // signs ought to be put next back to exp or leading
+        if sign_p != 0 {
+            if e_p != usize::MAX && sign_p == e_p + 1 {} else {
+                return false;
+            }
+        }
+        if sign_p == n-1 { // even if signs are properly put, it cannot be the last char
+            return false;
+        }
+    }
+    return true; // If all the above checks are passed, it is a valid number
+}
+
 #[cfg(test)]
 mod test_modules {
     use super::*;
@@ -211,5 +418,77 @@ mod test_modules {
     #[test]
     fn notest_generate_spiral_matrix() {
         println!("{:?}", generate_matrix(3))
+    }
+
+    #[test]
+    fn notest_get_permutation() {
+        println!("{}", get_permutation(6, 444))
+    }
+
+    #[test]
+    fn test_unique_paths() {
+        assert_eq!(28, unique_paths(3, 7))
+    }
+
+    #[test]
+    fn test_unique_paths_with_obstacles() {
+        let obs = vec![vec![0,1],vec![0,0]];
+        assert_eq!(unique_paths_with_obstacles(obs), 1);
+    }
+
+    #[test]
+    fn test_minimum_path_sum() {
+        let board = vec![vec![1,3,1],vec![1,5,1],vec![4,2,1]];
+        assert_eq!(min_path_sum(board), 7);
+    }
+}
+
+#[cfg(test)]
+mod test_is_valid_number_dedicated {
+    use super::is_number;
+
+    #[test]
+    fn test_1() {
+        assert_eq!(is_number(String::from("-8.74e-7845")), true);
+    }
+
+    #[test]
+    fn test_2() {
+        assert_eq!(is_number(String::from("-8.74-7845")), false);
+    }
+
+    #[test]
+    fn test_3() {
+        assert_eq!(is_number(String::from("-8.74-e7845")), false);
+    }
+
+    #[test]
+    fn test_4() {
+        assert_eq!(is_number(String::from("-e-7845")), false);
+    }
+
+    #[test]
+    fn test_5() {
+        assert_eq!(is_number(String::from("-8.74e-7.845")), false);
+    }
+
+    #[test]
+    fn test_6() {
+        assert_eq!(is_number(String::from("-8.74e-")), false);
+    }
+
+    #[test]
+    fn test_7() {
+        assert_eq!(is_number(String::from("-8e+7")), true);
+    }
+
+    #[test]
+    fn test_8() {
+        assert_eq!(is_number(String::from("0x11")), false);
+    }
+
+    #[test]
+    fn test_9() {
+        assert_eq!(is_number(String::from("6+1")), false)
     }
 }
