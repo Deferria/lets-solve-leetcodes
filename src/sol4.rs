@@ -1,3 +1,5 @@
+use crate::collections::ListNode;
+
 /// This is the solution to LeetCode Problem 54. "Spiral Matrix".
 pub fn spiral_order(matrix: Vec<Vec<i32>>) -> Vec<i32> {
     let n = matrix.len();
@@ -405,6 +407,68 @@ pub fn is_number(s: String) -> bool {
     return true; // If all the above checks are passed, it is a valid number
 }
 
+/// This is the solution to LeetCode Problem 66. "Plus One". The goal is to add one to a number represented as an array of digits. 
+pub fn plus_one(mut digits: Vec<i32>) -> Vec<i32> {
+    let n = digits.len();
+    let mut ind = 0;
+    for (id, d) in digits.iter_mut().enumerate().rev() {
+        if id == n-1 {
+            *d += 1
+        }
+        *d += ind;
+        if *d == 10 {
+            *d = 0;
+            ind = 1
+        } else {
+            ind = 0
+        }
+    }
+    if ind == 1 {
+        let mut temp = vec![1];
+        temp.append(&mut digits);
+        return temp;
+    }
+    digits
+}
+
+/// This is the solution to LeetCode Problem 61. "Rotate List". The function rotates a linked list to the right by k places, where k is non-negative.
+/// 
+/// Since **cyclic listnodes are not allowed in Rust** (due to ownership and borrowing rules), we need to carefully manipulate the list nodes to achieve the rotation without creating cycles.
+pub fn rotate_right(mut head: Option<Box<ListNode>>, k: i32) -> Option<Box<ListNode>> {
+    let mut n = 0;
+    let mut curr = head.as_ref();
+    while let Some(node) = curr {
+        n += 1;
+        curr = node.next.as_ref();
+    }
+    if n == 0 {
+        return head;
+    }
+    let r = k % n;
+    if r == 0 {
+        return head;
+    }
+    let mut dummy = Box::new(ListNode {
+        val: i32::MAX,
+        next: None,
+    });
+    let mut tail = &mut dummy;
+    let mut curr2 = head.as_mut();
+    for _ in 0..(n-r-1) {
+        //println!("This is {i} iter");
+        curr2 = curr2.unwrap().next.as_mut();
+    }
+    //println!("Val: {}", curr2.as_ref().unwrap().val);
+    let temp = curr2.unwrap().next.take();
+    tail.next = temp;
+    for _ in 0..r {
+        //println!("This is {i} iter resumed");
+        tail = tail.next.as_mut().unwrap();
+    }
+    tail.next = head;
+    dummy.next
+}
+
 #[cfg(test)]
 mod test_modules {
     use super::*;
@@ -440,6 +504,20 @@ mod test_modules {
     fn test_minimum_path_sum() {
         let board = vec![vec![1,3,1],vec![1,5,1],vec![4,2,1]];
         assert_eq!(min_path_sum(board), 7);
+    }
+
+    #[test]
+    fn test_plus_one() {
+        let d = vec![4,3,9,9];
+        let expected = vec![4,4,0,0];
+        assert_eq!(plus_one(d), expected);
+    }
+
+    #[test]
+    fn test_rotate_right() {
+        let hd = ListNode::from_vec(&[1,2,3,4,5]);
+        println!("{}", hd.as_ref().unwrap());
+        println!("{}", rotate_right(hd, 2).unwrap());
     }
 }
 
