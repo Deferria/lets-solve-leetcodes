@@ -214,7 +214,7 @@ pub fn get_permutation(n: i32, k: i32) -> String {
     while ind > 0 {
         n_fact /= ind;
         let q = start / n_fact;
-        let temp = candid.remove(q as usize);
+        let temp = candid.swap_remove(q as usize);
         let temp_char = (temp + '0' as u8) as char;
         ans.push(temp_char);
         ind -= 1;
@@ -455,18 +455,145 @@ pub fn rotate_right(mut head: Option<Box<ListNode>>, k: i32) -> Option<Box<ListN
     let mut tail = &mut dummy;
     let mut curr2 = head.as_mut();
     for _ in 0..(n-r-1) {
-        //println!("This is {i} iter");
         curr2 = curr2.unwrap().next.as_mut();
     }
     //println!("Val: {}", curr2.as_ref().unwrap().val);
     let temp = curr2.unwrap().next.take();
     tail.next = temp;
     for _ in 0..r {
-        //println!("This is {i} iter resumed");
         tail = tail.next.as_mut().unwrap();
     }
     tail.next = head;
     dummy.next
+}
+
+/// This is the (old) solution to LeetCode Problem 67. "Add Binary". The function adds two binary strings and returns their sum as a binary string.
+pub fn add_binary_1(a: String, b: String) -> String {
+    let (mut a_it, mut b_it) = (a.chars().rev(), b.chars().rev());
+    let mut ans = Vec::new();
+    let mut ind = 0u32;
+    let mut finish_flag = true;
+    while finish_flag || ind > 0 {
+        let temp: u32;
+        let (a_bit_wrap, b_bit_wrap) = (a_it.next(), b_it.next());
+        if a_bit_wrap.is_some() && b_bit_wrap.is_some() {
+            temp = ((a_bit_wrap.unwrap() as u8 - '0' as u8) + (b_bit_wrap.unwrap() as u8 - '0' as u8)) as u32 + ind;
+        } else if a_bit_wrap.is_none() && b_bit_wrap.is_some() {
+            temp = (b_bit_wrap.unwrap() as u8 - '0' as u8) as u32 + ind;
+        } else if a_bit_wrap.is_some() && b_bit_wrap.is_none() {
+            temp = (a_bit_wrap.unwrap() as u8 - '0' as u8) as u32 + ind;
+        } else {
+            temp = ind;
+            finish_flag = false;
+        }
+        //println!("Handling: {temp}");
+        let (q, r) = (temp / 2, temp % 2);
+        ind = q;
+        ans.push((r as u8 + '0' as u8) as char);
+        //println!("Push back: {r}");
+    }
+    if *ans.last().unwrap() == '0' {
+        ans.pop();
+    }
+    ans.into_iter().rev().collect()
+}
+
+/// This is the solution to LeetCode Problem 67. "Add Binary". 
+pub fn add_binary(a: String, b: String) -> String {
+    let mut ans = Vec::new();
+    let (mut i, mut j) = (a.len() as i32 - 1, b.len() as i32 - 1);
+    let mut ind = 0u8;
+    while i>=0 || j>=0 || ind > 0 {
+        if i >= 0 {
+            ind += a.chars().nth(i as usize).unwrap() as u8 - '0' as u8;
+            i -= 1;
+        }
+        if j >= 0 {
+            ind += b.chars().nth(j as usize).unwrap() as u8 - '0' as u8;
+            j -= 1;
+        }
+        ans.push((ind % 2 + '0' as u8) as char);
+        ind /= 2;
+    }
+    ans.into_iter().rev().collect()
+}
+
+/// This is the tool function for the solution to LeetCode Problem 68. "Text Justification". 
+/// 
+/// This function pads the wordlist with spaces to make it fully justified, where the spaces are distributed evenly between the words. If the number of spaces does not divide evenly, the extra spaces are added to the leftmost gaps.
+fn justification_formatter(wordlist: Vec<String>, max_width: usize) -> String {
+    let n = wordlist.len();
+    assert!(n > 1);
+    let mut w = 0;
+    for i in wordlist.iter() {
+        w += i.len()
+    }
+    let whitespaces = max_width - w;
+    let (q,r) = (whitespaces / (n-1), whitespaces % (n-1));
+    //let (q_w, r_w) = (' '.to_string().repeat(q), ' '.to_string().repeat(q+1));
+    let mut tar = String::new();
+    for (id , mut s) in wordlist.into_iter().enumerate() {
+        if id < r {
+            s.push_str(&" ".repeat(q+1));
+        } else if id != n-1 {
+            s.push_str(&" ".repeat(q));
+        }
+        tar.push_str(&s);
+    }
+    tar
+}
+
+/// The tool function for the solution to LeetCode Problem 68. "Text Justification". 
+/// 
+/// This function formats the wordlist into left-justified string, where the last line is left-justified and no extra space is inserted between words.
+fn end_justification_formatter(wordlist: Vec<String>, max_width: usize) -> String {
+    let mut tar = String::new();
+    let n = wordlist.len();
+    for (id , mut s) in wordlist.into_iter().enumerate() {
+        if id != n-1 {
+            s.push(' ');
+        }
+        tar.push_str(&s);
+    }
+    let r = max_width - tar.len();
+    tar.push_str(&" ".repeat(r));
+    tar
+}
+
+/// This is the solution to LeetCode Problem 68. "Text Justification". The function formats a list of words into a fully justified text, where each line has exactly max_width characters and is both left and right justified.
+pub fn full_justify(words: Vec<String>, max_width: i32) -> Vec<String> {
+    let max_width = max_width as usize;
+    let mut ans = Vec::new();
+    let mut i = 0;
+    let mut curr_len = 0usize;
+    let mut temp_carrier = Vec::new();
+    while i < words.len() {
+        let temp = &words[i];
+        if curr_len + temp.len() <= max_width {
+            temp_carrier.push(temp.clone());
+            curr_len += temp.len() + 1;
+            i += 1;
+        } else {
+            ans.push(temp_carrier.clone());
+            temp_carrier.clear();
+            curr_len = 0;
+        }
+    }
+    ans.push(temp_carrier);
+    let n = ans.len();
+    let mut res = Vec::new();
+    for (id, it) in ans.into_iter().enumerate() {
+        if id != n-1 {
+            if it.len() == 1 {
+                res.push(end_justification_formatter(it, max_width));
+            } else {
+                res.push(justification_formatter(it, max_width));
+            }
+        } else {
+            res.push(end_justification_formatter(it, max_width));
+        }
+    }
+    res
 }
 
 #[cfg(test)]
@@ -516,8 +643,40 @@ mod test_modules {
     #[test]
     fn test_rotate_right() {
         let hd = ListNode::from_vec(&[1,2,3,4,5]);
+        let expected = ListNode::from_vec(&[4,5,1,2,3]);
         println!("{}", hd.as_ref().unwrap());
-        println!("{}", rotate_right(hd, 2).unwrap());
+        let val = rotate_right(hd, 2);
+        println!("{}", val.as_ref().unwrap());
+        assert_eq!(val, expected);
+    }
+
+    #[test]
+    fn test_add_binary() {
+        assert_eq!(add_binary(String::from("11111111"), String::from("10001001")), String::from("110001000"));
+    }
+
+    #[test]
+    fn test_add_binary_2() {
+        assert_eq!(add_binary(String::from("0"), String::from("10001001")), String::from("10001001"));
+    }
+
+    #[test]
+    fn test_add_binary_3() {
+        assert_eq!(add_binary(String::from("1"), String::from("10001001")), String::from("10001010"));
+    }
+
+    #[test]
+    fn test_text_justification() {
+        let word_list_original = vec!["This", "is", "an", "example", "of", "text", "justification."];
+        let mut words : Vec<String> = Vec::new();
+        for i in word_list_original.into_iter() {
+            words.push(i.into());
+        }
+        let res = full_justify(words, 16);
+        println!("res: {:?}", res);
+        for it in res.iter() {
+            println!("{}", it.len())
+        }
     }
 }
 
@@ -568,5 +727,10 @@ mod test_is_valid_number_dedicated {
     #[test]
     fn test_9() {
         assert_eq!(is_number(String::from("6+1")), false)
+    }
+
+    #[test]
+    fn test_10() {
+        assert_eq!(is_number(String::from("++1")), false)
     }
 }
