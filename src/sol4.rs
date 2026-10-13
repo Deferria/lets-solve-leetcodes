@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::collections::ListNode;
 
 /// This is the solution to LeetCode Problem 54. "Spiral Matrix".
@@ -518,9 +519,11 @@ pub fn add_binary(a: String, b: String) -> String {
     ans.into_iter().rev().collect()
 }
 
-/// This is the tool function for the solution to LeetCode Problem 68. "Text Justification". 
-/// 
-/// This function pads the wordlist with spaces to make it fully justified, where the spaces are distributed evenly between the words. If the number of spaces does not divide evenly, the extra spaces are added to the leftmost gaps.
+/**
+This is the tool function for the solution to LeetCode Problem 68. "Text Justification". 
+
+This function pads the wordlist with spaces to make it fully justified, where the spaces are distributed evenly between the words. If the number of spaces does not divide evenly, the extra spaces are added to the leftmost gaps.
+*/
 fn justification_formatter(wordlist: Vec<String>, max_width: usize) -> String {
     let n = wordlist.len();
     assert!(n > 1);
@@ -596,6 +599,212 @@ pub fn full_justify(words: Vec<String>, max_width: i32) -> Vec<String> {
     res
 }
 
+/// This is the solution to LeetCode Problem 69. "Sqrt(x)". 
+/// The function calculates the integer square root of a non-negative integer x, which is the greatest integer less than or equal to the square root of x.
+pub fn my_sqrt(x: i32) -> i32 {
+    if x == 0 {
+        return 0;
+    }
+    if x == 1 {
+        return 1;
+    }
+    let x = x as u64;
+    let (mut l, mut r) = (1, x);
+    while l < r-1 {
+        let mid = (l+r) / 2;
+        println!("Testing {mid}");
+        if mid * mid > x {
+            r = mid
+        } else if mid * mid < x {
+            l = mid
+        } else {
+            return mid as i32
+        }
+    }
+    l as i32
+}
+
+/// This is the solution to LeetCode Problem 70. "Climbing Stairs". 
+/// 
+/// Dynamic Programming is used and the Space complexity is O(n).
+pub fn climb_stairs(n: i32) -> i32 {
+    if n == 1 {
+        return 1;
+    }
+    let n = n as usize;
+    let mut dp = vec![1; n + 1];
+    for i in 2..n+1 {
+        dp[i] = dp[i-1] + dp[i-2]
+    }
+    *dp.last().unwrap()
+}
+
+/// This is the solution to LeetCode Problem 71. "Simplify Path".
+/// 
+/// The task is to simplify a given Unix-style file path. The function processes the path by splitting it into components, handling special cases like "." (current directory) and ".." (parent directory), and reconstructing the simplified path.
+pub fn simplify_path(mut path: String) -> String {
+    let mut v = Vec::new();
+    let mut temp_carrier = String::new();
+    path.push('/');
+    for p in path.chars() {
+        if p == '/' {
+            if temp_carrier == "..".to_string() {
+                v.pop();
+            } else if temp_carrier == ".".to_string() {} else if temp_carrier.is_empty() {} else {
+                v.push(temp_carrier.clone());
+            }
+            temp_carrier.clear();
+        } else {
+            temp_carrier.push(p);
+        }
+    }
+    //println!("Temp: {:?}", v);
+    let mut s = String::new();
+    for p in v.into_iter() {
+        s.push('/');
+        s.push_str(&p);
+    }
+    if s.is_empty() {
+        return String::from("/");
+    }
+    s
+}
+
+/// This is the (old) implementation to LeetCode Problem 72. "Edit Distance".
+/// 
+/// This solution uses a 2D dynamic programming table to compute the minimum number of operations (insertions, deletions, substitutions) required to convert one word into another. 
+/// The table is filled based on the comparison of characters in the two words, and the final answer is found in the bottom-right cell of the table.
+/// 
+///  - Time complexity: O(mn);
+///  - Space complexity: O(mn).
+pub fn min_distance_1(word1: String, word2: String) -> i32 {
+    let (m, n) = (word1.len(), word2.len());
+    // initialize the dp table
+    let mut dp = Vec::with_capacity(n+1);
+    for _ in 0..(n+1) {
+        dp.push(vec![i32::MAX; m+1]);
+    }
+    // define the boundary condition
+    for i in 0..(m+1) {
+        dp[0][i] = i as i32;
+    }
+    for i in 0..(n+1) {
+        dp[i][0] = i as i32;
+    }
+    let v1: Vec<char> = word1.chars().collect();
+    let v2: Vec<char> = word2.chars().collect();
+    // traverse the inner
+    for i in 1..(n+1) {
+        for j in 1..(m+1) {
+            if v1[j-1] == v2[i-1] {
+                dp[i][j] = dp[i-1][j-1];
+            } else {
+                dp[i][j] = 1 + std::cmp::min(std::cmp::min(dp[i][j-1], dp[i-1][j]), dp[i-1][j-1])
+            }
+        }
+    }
+    dp[n][m]
+}
+
+/// This is the optimized implementation to LeetCode Problem 72. "Edit Distance".
+/// 
+/// This solution uses a 1D dynamic programming array to compute the minimum number of operations (insertions, deletions, substitutions) required to convert one word into another. 
+/// The array is updated in each iteration based on the comparison of characters in the two words, and the final answer is found in the last element of the array.
+/// 
+///  - Time complexity: O(mn);
+///  - Space complexity: O(2n).
+pub fn min_distance(word1: String, word2: String) -> i32 {
+    let (m, n) = (word1.len(), word2.len());
+    let mut prev = Vec::with_capacity(n+1);
+    for i in 0..(n+1) {
+        prev.push(i);
+    }
+    let mut curr = prev.clone();
+    let v1: Vec<char> = word1.chars().collect();
+    let v2: Vec<char> = word2.chars().collect();
+    for i in 1..(m+1) {
+        curr[0] = i;
+        for k in 1..(n+1) {
+            if v1[i-1] == v2[k-1] {
+                curr[k] = prev[k-1]
+            } else {
+                curr[k] = 1 + std::cmp::min(std::cmp::min(prev[k-1], prev[k]), curr[k-1])
+            }
+        }
+        //println!("prev: {:?}, curr: {:?}", prev, curr);
+        prev = curr.clone();
+        curr = prev.clone();
+    }
+    curr[n] as i32
+}
+
+/// This is the (old) solution to LeetCode Problem 73. "Set Matrix Zeroes". That is, if an element in an m x n matrix is 0, its entire row and column are set to 0. The operation should be in-place.
+/// 
+/// We use a HashMap to record the columns that need to be set to zero, and we iterate through the matrix twice: first to set the rows to zero and record the columns, and second to set the recorded columns to zero.
+/// 
+///  - Time complexity: O(mn);
+///  - Space complexity: O(n).
+pub fn set_zeroes_1(matrix: &mut Vec<Vec<i32>>) {
+    let (m, n) = (matrix.len(), matrix[0].len());
+    let mut record = HashMap::new();
+    for r in matrix.iter_mut() {
+        let mut zero_flag = false;
+        for j in 0..n {
+            if r[j] == 0 {
+                zero_flag = true;
+                record.insert(j, true);
+            }
+        }
+        if zero_flag {
+            for j in r.iter_mut() {
+                *j = 0;
+            }
+        }
+    }
+    for i in 0..n {
+        if *record.entry(i).or_insert(false) {
+            for j in 0..m {
+                matrix[j][i] = 0
+            }
+        }
+    }
+}
+
+/// This is the new implementation to LeetCode Problem 73. "Set Matrix Zeroes". 
+/// 
+/// Rather than using extra lists or hashmaps, we directly use the first row to record the columns that need to be set to zero. 
+/// 
+///  - Time complexity: O(mn);
+///  - Space complexity: O(1).
+pub fn set_zeroes(matrix: &mut Vec<Vec<i32>>) {
+    let (m, n) = (matrix.len(), matrix[0].len());
+    let first_zero = if matrix[0].contains(&0) { true } else { false };
+    for i in 1..m {
+        let mut zero_flag = false;
+        for j in 0..n {
+            if matrix[i][j] == 0 {
+                zero_flag = true;
+                matrix[0][j] = 0;
+            }
+        }
+        if zero_flag {
+            for j in 0..n {
+                matrix[i][j] = 0
+            }
+        }
+    }
+    for j in 0..n {
+        if matrix[0][j] == 0 {
+            for i in 1..m {
+                matrix[i][j] = 0
+            }
+        }
+    }
+    if first_zero {
+        matrix[0] = vec![0; n]
+    }
+}
+
 #[cfg(test)]
 mod test_modules {
     use super::*;
@@ -666,7 +875,7 @@ mod test_modules {
     }
 
     #[test]
-    fn test_text_justification() {
+    fn notest_text_justification() {
         let word_list_original = vec!["This", "is", "an", "example", "of", "text", "justification."];
         let mut words : Vec<String> = Vec::new();
         for i in word_list_original.into_iter() {
@@ -677,6 +886,32 @@ mod test_modules {
         for it in res.iter() {
             println!("{}", it.len())
         }
+    }
+
+    #[test]
+    fn test_my_sqrt() {
+        assert_eq!(my_sqrt(121), 11)
+    }
+
+    #[test]
+    fn test_my_sqrt_2() {
+        assert_eq!(my_sqrt(2147395599), 46339)
+    }
+
+    #[test]
+    fn test_climb_stairs() {
+        assert_eq!(climb_stairs(5), 8)
+    }
+
+    #[test]
+    fn test_simplify_path() {
+        let s = simplify_path("/home/user/Documents/../Pictures".into());
+        println!("s: {s}")
+    }
+
+    #[test]
+    fn test_edit_distance() {
+        assert_eq!(min_distance("kitten".to_string(), "sitting".to_string()), 3);
     }
 }
 
