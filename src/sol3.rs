@@ -174,7 +174,7 @@ pub fn first_missing_positive_3(mut nums: Vec<i32>) -> i32 {
     return nums.len() as i32 + 1;
 }
 
-/// This is the solution to Problem **41. trapping rain water**.
+/// This is the solution to Problem **42. trapping rain water**.
 pub fn trap(height: Vec<i32>) -> i32 {
     let (mut l, mut r) = (0usize, height.len()-1);
     let (mut lm, mut rm) = (height[l], height[r]);

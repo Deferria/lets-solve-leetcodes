@@ -4,7 +4,7 @@
 
 use crate::collections::ListNode;
 
-/// This is the leetcode solution to problem 1.
+/// This is the leetcode solution to problem 1. "Two Sum".
 pub fn two_sum(nums: Vec<i32>, target: i32) -> Vec<i32> {
     for i in 0..nums.len() {
         for j in i + 1..nums.len() {
@@ -595,6 +595,7 @@ pub fn letter_combinations(digits: String) -> Vec<String> {
 }
 
 /// To handle overflow in the four_sum problem, we define an enum to represent the result of a safe sum operation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum I32WithOverflow {
     Item(i32),
     Upward,
