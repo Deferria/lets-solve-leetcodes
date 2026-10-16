@@ -1,4 +1,4 @@
-use crate::collections::ListNode;
+use crate::{collections::ListNode};
 
 /// This is the inner recursion function for the leetcode problem 77. Combinations to combine numbers from `start` to `n` with `k` numbers. `curr` and `res` are used to execute side-effects.
 fn combine_inner(start: i32, n: i32, k: i32, curr: &mut Vec<i32>, res: &mut Vec<Vec<i32>>) {
@@ -401,6 +401,129 @@ pub fn largest_rectangle_area(heights: Vec<i32>) -> i32 {
     area
 }
 
+/// This is the solution to leetcode problem 86. Partition List. Given the head of a linked list and a value x, partition it such that all nodes less than x come before nodes greater than or equal to x. 
+/// You should preserve the original relative order of the nodes in each of the two partitions.
+pub fn partition(mut head: Option<Box<ListNode>>, x: i32) -> Option<Box<ListNode>> {
+    let mut dummy = ListNode::new(0);
+    let mut carrier = ListNode::new(i32::MIN);
+    let (mut tail, mut ret) = (&mut dummy, &mut carrier);
+
+    while let Some(mut nd) = head {
+        head = nd.next.take();
+        //println!("val: {}", nd.val);
+        if nd.val < x {
+            tail.next = Some(nd);
+            tail = tail.next.as_mut().unwrap();
+        } else {
+            ret.next = Some(nd);
+            ret = ret.next.as_mut().unwrap();
+        }
+    }
+    tail.next = carrier.next.take();
+    dummy.next
+}
+
+/// This is the solution to leetcode problem 88. Merge Sorted Array. Given two sorted integer arrays nums1 and nums2, merge nums2 into nums1 as one sorted array.
+/// The number of elements initialized in nums1 and nums2 are m and n respectively. You may assume that nums1 has enough space (size that is equal to m + n) to hold additional elements from nums2.
+pub fn merge(nums1: &mut Vec<i32>, m: i32, nums2: &mut Vec<i32>, n: i32) {
+    let (m, n) = (m as usize, n as usize);
+    //assert_eq!(nums2.len(), n);
+    let l = nums1.len();
+    //assert!(m <= l);
+    let (mut n1f, mut n1s, mut n2) = (l-1, m as isize -1, n as isize -1);
+    while n2 >=0 && n1s >= 0 {
+        //println!("f={}, s={}, 2={}", n1f, n1s, n2);
+        if nums1[n1s as usize] > nums2[n2 as usize] {
+            nums1.swap(n1s as usize, n1f as usize);
+            n1s -= 1;
+        } else {
+            nums1[n1f] = nums2[n2 as usize];
+            n2 -= 1;
+        }
+        n1f -= 1;
+    }
+    //println!("Finished. f={}, s={}, 2={}", n1f, n1s, n2);
+    if n2 == -1 {
+        return;
+    }
+    for i in 0..(n1f+1) {
+        nums1[i] = nums2[i]
+    }
+}
+
+/// This is the solution to leetcode problem 89. Gray Code.
+pub fn gray_code(n: i32) -> Vec<i32> {
+    if n == 1 {
+        return vec![0,1];
+    }
+    let mut prev = gray_code(n-1);
+    let bs = 1 << (n-1) as usize;
+    let mut curr = Vec::new();
+    for i in prev.iter().rev() {
+        curr.push(bs+*i);
+    }
+    prev.append(&mut curr);
+    prev
+}
+
+/// This is the solution to leetcode problem 90. Subsets II. Given an integer array nums that may contain duplicates, return all possible subsets (the power set). 
+/// The solution set must not contain duplicate subsets. Return the solution in any order.
+pub fn subsets_with_dup(mut nums: Vec<i32>) -> Vec<Vec<i32>> {
+    nums.sort();
+    let mut ans = Vec::new();
+    let mut carrier = Vec::new();
+    subsets_with_dup_meta(&nums, 0, &mut carrier, &mut ans);
+    ans
+}
+
+/// The inner recursion used in solution to problem 90.
+fn subsets_with_dup_meta(nums: &Vec<i32>, ind: usize, curr: &mut Vec<i32>, answer: &mut Vec<Vec<i32>>) {
+    if ind == nums.len() {
+        answer.push(curr.to_vec());
+        return;
+    }
+    curr.push(nums[ind]);
+    subsets_with_dup_meta(nums, ind+1, curr, answer);
+    let cmps = curr.pop().unwrap();
+    let mut ind_temp = ind;
+    while ind_temp < nums.len() && nums[ind_temp] == cmps {
+        ind_temp += 1;
+    }
+    subsets_with_dup_meta(nums, ind_temp, curr, answer);
+}
+
+/// This is the solution to leetcode problem 91. Decode Ways. 
+/// 
+/// A message containing letters from A-Z can be encoded into numbers using the following mapping: 'A' -> "1", 'B' -> "2", ..., 'Z' -> "26". Given a string s containing only digits, return the number of ways to decode it.
+/// 
+/// **Dynamic Programming** is used, thus time complexity O(n) and space complexity O(n).
+pub fn num_decodings(s: String) -> i32 {
+    if s.len() == 0 || s.starts_with("0") {
+        return 0;
+    }
+    let sv: Vec<char> = s.chars().rev().collect();
+    let mut dp = vec![0; sv.len()+1];
+    dp[0] = 1;
+    if sv[0] != '0' {
+        dp[1] = 1;
+    }
+    for i in 2..(sv.len()+1) {
+        let nxt1 = sv[i-2];
+        let nxt2 = sv[i-1];
+        println!("{}, {}", nxt1, nxt2);
+        if nxt2 != '0' {
+            dp[i] += dp[i-1];
+        }
+        let temp = (nxt2 as u8 - '0' as u8) * 10 + (nxt1 as u8 - '0' as u8);
+        println!("temp={}", temp);
+        if temp >= 10 && temp <= 26 {
+            dp[i] += dp[i-2];
+        }
+        println!("{:?}", dp);
+    }
+    dp[sv.len()]
+}
+
 #[cfg(test)]
 mod test_module {
     use super::*;
@@ -496,5 +619,74 @@ mod test_module {
     fn test_largest_rectangle_area() {
         let v = vec![2,4,2,6,4,2,1,7,6,3,2,1,2,1,3];
         largest_rectangle_area(v);
+    }
+
+    #[test]
+    fn test_merge_sorted_array() {
+        let mut v1 = vec![1,3,6,10,0,0,0];
+        let mut v2 = vec![2,2,4];
+        merge(&mut v1, 4, &mut v2, 3);
+        println!("{:?}", v1);
+    }
+
+    #[test]
+    fn test_merge_sorted_array_2() {
+        let mut v1 = vec![2,0];
+        let mut v2 = vec![1];
+        merge(&mut v1, 1, &mut v2, 1);
+        assert_eq!(vec![1,2], v1);
+    }
+
+    #[test]
+    fn test_merge_sorted_array_3() {
+        let mut v1 = vec![-1,0,0,3,3,3,0,0,0];
+        let mut v2 = vec![1,2,2];
+        merge(&mut v1, 6, &mut v2, 3);
+        assert_eq!(vec![-1,0,0,1,2,2,3,3,3], v1);
+    }
+
+    #[test]
+    fn test_merge_sorted_array_4() {
+        let mut v1 = vec![0,0,3,0,0,0,0,0,0,0,0];
+        let mut v2 = vec![-3,-2,-1,1,1,1,2,3];
+        merge(&mut v1, 3, &mut v2, 8);
+        assert_eq!(vec![-3,-2,-1,0,0,1,1,1,2,3,3], v1);
+    }
+
+    #[test]
+    fn notest_gray_code() {
+        println!("{:?}", gray_code(6));
+    }
+
+    #[test]
+    fn notest_subsets_with_dup() {
+        let v = vec![1,2,2,3];
+        println!("{:?}", subsets_with_dup(v));
+    }
+
+    #[test]
+    fn test_num_decodings() {
+        let s = String::from("11106");
+        assert_eq!(num_decodings(s), 2);
+    }
+
+    #[test]
+    fn test_num_decodings_2() {
+        let s = String::from("4110");
+        assert_eq!(num_decodings(s), 1);
+    }
+
+    #[test]
+    //#[should_panic]
+    fn test_num_decodings_3 () {
+        let s = String::from("2224");
+        assert_eq!(num_decodings(s), 5);
+    }
+
+    #[test]
+    //#[should_panic]
+    fn test_num_decodings_4 () {
+        let s = String::from("2101");
+        assert_eq!(num_decodings(s), 1);
     }
 }

@@ -1,5 +1,6 @@
 use crate::collections::ListNode;
 
+/// This is the solution to leetcode problem 83. Remove Duplicates from Sorted List. 
 pub fn delete_duplicates(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
     let mut dummy = Box::new(ListNode { val: i32::MAX, next: head });
     let mut tl = &mut dummy;
