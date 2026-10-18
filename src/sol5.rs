@@ -1,4 +1,4 @@
-use crate::{collections::ListNode};
+use crate::collections::ListNode;
 
 /// This is the inner recursion function for the leetcode problem 77. Combinations to combine numbers from `start` to `n` with `k` numbers. `curr` and `res` are used to execute side-effects.
 fn combine_inner(start: i32, n: i32, k: i32, curr: &mut Vec<i32>, res: &mut Vec<Vec<i32>>) {
@@ -198,9 +198,9 @@ pub fn search(nums: Vec<i32>, target: i32) -> bool {
 }
 
 /// This is the solution to the leetcode problem 82. Remove Duplicates from Sorted List II. Given the head of a sorted linked list, delete all nodes that have duplicate numbers, leaving only distinct numbers from the original list. Return the linked list sorted as well.
-/// 
+///
 /// In this implementation, to avoid borrowing and ownership issues, instead of modifying the original list, we read the values and directly construct a new listnode with according values.
-/// 
+///
 /// - Time complexity: O(n)
 /// - Space complexity: O(n)
 pub fn delete_duplicates_1(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
@@ -229,10 +229,10 @@ pub fn delete_duplicates_1(head: Option<Box<ListNode>>) -> Option<Box<ListNode>>
 }
 
 /// This is the solution to the leetcode problem 82. Remove Duplicates from Sorted List II. Given the head of a sorted linked list, delete all nodes that have duplicate numbers, leaving only distinct numbers from the original list. Return the linked list sorted as well.
-/// 
-/// In this implementation, we modify the original list in-place. We use a dummy node to simplify the edge cases and a pointer `tl` to track the tail of the new list. We check for duplicates by comparing the current node's value with the next node's value. 
+///
+/// In this implementation, we modify the original list in-place. We use a dummy node to simplify the edge cases and a pointer `tl` to track the tail of the new list. We check for duplicates by comparing the current node's value with the next node's value.
 /// If duplicates are found, we skip all nodes with that value. Otherwise, we move the tail pointer forward. In this step, `take()` method is used to take ownership of the next node, allowing us to modify the list without hatching borrowing problems.
-/// 
+///
 /// - Time complexity: O(n)
 /// - Space complexity: O(1)
 pub fn delete_duplicates_2(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
@@ -265,15 +265,20 @@ pub fn delete_duplicates_2(head: Option<Box<ListNode>>) -> Option<Box<ListNode>>
     dummy.unwrap().next
 }
 
-/// This is the solution to the leetcode problem 82. Remove Duplicates from Sorted List II. 
-/// 
-/// Rather than using a pointer at the tail and use `take()` conditionally, we directly pick the next node off the listnode and check duplication. If not, we insert it back; otherwise, we discard amd move on. 
+/// This is the solution to the leetcode problem 82. Remove Duplicates from Sorted List II.
+///
+/// Rather than using a pointer at the tail and use `take()` conditionally, we directly pick the next node off the listnode and check duplication. If not, we insert it back; otherwise, we discard amd move on.
 pub fn delete_duplicates(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
-    let mut dummy = Box::new(ListNode { val: i32::MAX, next: head });
+    let mut dummy = Box::new(ListNode {
+        val: i32::MAX,
+        next: head,
+    });
     let mut prev = &mut dummy;
     while let Some(mut curr) = prev.next.take() {
         let mut dup_flag = false;
-        while let Some(nxt) = &mut curr.next && curr.val == nxt.val {
+        while let Some(nxt) = &mut curr.next
+            && curr.val == nxt.val
+        {
             curr.next = nxt.next.take();
             dup_flag = true;
         }
@@ -287,16 +292,18 @@ pub fn delete_duplicates(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
 }
 
 /// This is the solution to the leetcode problem 82. Remove Duplicates from Sorted List II.
-/// 
+///
 /// This is a valid implementation without using a dummy node.
 pub fn delete_duplicates_3(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
     let (mut hd, mut rt) = (head, None);
     let mut tl = &mut rt;
     let mut compr = i32::MAX;
-    
+
     while let Some(mut node) = hd {
         hd = node.next.take();
-        if node.val == compr { continue; }
+        if node.val == compr {
+            continue;
+        }
         if hd.is_some() && node.val == hd.as_ref().unwrap().val {
             compr = node.val;
             continue;
@@ -308,10 +315,13 @@ pub fn delete_duplicates_3(head: Option<Box<ListNode>>) -> Option<Box<ListNode>>
 }
 
 /// This is the solution to the leetcode problem 82. Remove Duplicates from Sorted List II.
-/// 
+///
 /// This is a valid implementation using unsafe Rust code.
 pub fn delete_duplicates_4(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
-    let mut dummy = Box::new(ListNode { val: i32::MAX, next: head });
+    let mut dummy = Box::new(ListNode {
+        val: i32::MAX,
+        next: head,
+    });
     unsafe {
         let mut curr = &mut *dummy as *mut ListNode;
         while let Some(node) = (*curr).next.as_mut() {
@@ -336,8 +346,8 @@ pub fn delete_duplicates_4(head: Option<Box<ListNode>>) -> Option<Box<ListNode>>
     dummy.next
 }
 
-/// This is the solution to leetcode problem 84. Largest Rectangle in Histogram. 
-/// 
+/// This is the solution to leetcode problem 84. Largest Rectangle in Histogram.
+///
 /// Given an array of integers heights representing the histogram's bar height where the width of each bar is 1, return the area of the largest rectangle in the histogram.
 pub fn largest_rectangle_area_1(heights: Vec<i32>) -> i32 {
     let n = heights.len();
@@ -345,7 +355,9 @@ pub fn largest_rectangle_area_1(heights: Vec<i32>) -> i32 {
     let mut stack: Vec<isize> = Vec::new();
     // This is to find the first (strict) left-smaller element's index
     for i in 0..n {
-        while let Some(val) = stack.last() && heights[*val as usize] >= heights[i] {
+        while let Some(val) = stack.last()
+            && heights[*val as usize] >= heights[i]
+        {
             stack.pop();
         }
         indl[i] = *stack.last().unwrap_or(&-1) as isize;
@@ -355,8 +367,10 @@ pub fn largest_rectangle_area_1(heights: Vec<i32>) -> i32 {
     // This is to find the first (strict) right-smaller element's index
     let mut indr = vec![1; n];
     for i in 0..n {
-        let j = n-1-i;
-        while let Some(val) = stack.last() && heights[*val as usize] >= heights[j] {
+        let j = n - 1 - i;
+        while let Some(val) = stack.last()
+            && heights[*val as usize] >= heights[j]
+        {
             stack.pop();
         }
         indr[j] = *stack.last().unwrap_or(&(n as isize)) as isize;
@@ -371,9 +385,9 @@ pub fn largest_rectangle_area_1(heights: Vec<i32>) -> i32 {
 }
 
 /// This is the solution to leetcode problem 84. Largest Rectangle in Histogram.
-/// 
-/// An optimization to the version above. Without using two vectors to record the position of the first left-smaller and right-smaller elements, we can use a single stack to keep track of the indices of the bars. 
-/// When we encounter a bar that is shorter than the bar at the index stored at the top of the stack, we pop from the stack and calculate the area of the rectangle that can be formed with the popped bar as the shortest bar. 
+///
+/// An optimization to the version above. Without using two vectors to record the position of the first left-smaller and right-smaller elements, we can use a single stack to keep track of the indices of the bars.
+/// When we encounter a bar that is shorter than the bar at the index stored at the top of the stack, we pop from the stack and calculate the area of the rectangle that can be formed with the popped bar as the shortest bar.
 /// We continue this process until we have processed all bars in the histogram.
 pub fn largest_rectangle_area(heights: Vec<i32>) -> i32 {
     let n = heights.len();
@@ -395,13 +409,13 @@ pub fn largest_rectangle_area(heights: Vec<i32>) -> i32 {
         stack.push((start, h));
     }
     while let Some((hindex, h)) = stack.pop() {
-        let temp = (n-hindex) as i32 * h;
+        let temp = (n - hindex) as i32 * h;
         area = area.max(temp)
     }
     area
 }
 
-/// This is the solution to leetcode problem 86. Partition List. Given the head of a linked list and a value x, partition it such that all nodes less than x come before nodes greater than or equal to x. 
+/// This is the solution to leetcode problem 86. Partition List. Given the head of a linked list and a value x, partition it such that all nodes less than x come before nodes greater than or equal to x.
 /// You should preserve the original relative order of the nodes in each of the two partitions.
 pub fn partition(mut head: Option<Box<ListNode>>, x: i32) -> Option<Box<ListNode>> {
     let mut dummy = ListNode::new(0);
@@ -430,8 +444,8 @@ pub fn merge(nums1: &mut Vec<i32>, m: i32, nums2: &mut Vec<i32>, n: i32) {
     //assert_eq!(nums2.len(), n);
     let l = nums1.len();
     //assert!(m <= l);
-    let (mut n1f, mut n1s, mut n2) = (l-1, m as isize -1, n as isize -1);
-    while n2 >=0 && n1s >= 0 {
+    let (mut n1f, mut n1s, mut n2) = (l - 1, m as isize - 1, n as isize - 1);
+    while n2 >= 0 && n1s >= 0 {
         //println!("f={}, s={}, 2={}", n1f, n1s, n2);
         if nums1[n1s as usize] > nums2[n2 as usize] {
             nums1.swap(n1s as usize, n1f as usize);
@@ -446,7 +460,7 @@ pub fn merge(nums1: &mut Vec<i32>, m: i32, nums2: &mut Vec<i32>, n: i32) {
     if n2 == -1 {
         return;
     }
-    for i in 0..(n1f+1) {
+    for i in 0..(n1f + 1) {
         nums1[i] = nums2[i]
     }
 }
@@ -454,19 +468,19 @@ pub fn merge(nums1: &mut Vec<i32>, m: i32, nums2: &mut Vec<i32>, n: i32) {
 /// This is the solution to leetcode problem 89. Gray Code.
 pub fn gray_code(n: i32) -> Vec<i32> {
     if n == 1 {
-        return vec![0,1];
+        return vec![0, 1];
     }
-    let mut prev = gray_code(n-1);
-    let bs = 1 << (n-1) as usize;
+    let mut prev = gray_code(n - 1);
+    let bs = 1 << (n - 1) as usize;
     let mut curr = Vec::new();
     for i in prev.iter().rev() {
-        curr.push(bs+*i);
+        curr.push(bs + *i);
     }
     prev.append(&mut curr);
     prev
 }
 
-/// This is the solution to leetcode problem 90. Subsets II. Given an integer array nums that may contain duplicates, return all possible subsets (the power set). 
+/// This is the solution to leetcode problem 90. Subsets II. Given an integer array nums that may contain duplicates, return all possible subsets (the power set).
 /// The solution set must not contain duplicate subsets. Return the solution in any order.
 pub fn subsets_with_dup(mut nums: Vec<i32>) -> Vec<Vec<i32>> {
     nums.sort();
@@ -477,13 +491,18 @@ pub fn subsets_with_dup(mut nums: Vec<i32>) -> Vec<Vec<i32>> {
 }
 
 /// The inner recursion used in solution to problem 90.
-fn subsets_with_dup_meta(nums: &Vec<i32>, ind: usize, curr: &mut Vec<i32>, answer: &mut Vec<Vec<i32>>) {
+fn subsets_with_dup_meta(
+    nums: &Vec<i32>,
+    ind: usize,
+    curr: &mut Vec<i32>,
+    answer: &mut Vec<Vec<i32>>,
+) {
     if ind == nums.len() {
         answer.push(curr.to_vec());
         return;
     }
     curr.push(nums[ind]);
-    subsets_with_dup_meta(nums, ind+1, curr, answer);
+    subsets_with_dup_meta(nums, ind + 1, curr, answer);
     let cmps = curr.pop().unwrap();
     let mut ind_temp = ind;
     while ind_temp < nums.len() && nums[ind_temp] == cmps {
@@ -492,36 +511,243 @@ fn subsets_with_dup_meta(nums: &Vec<i32>, ind: usize, curr: &mut Vec<i32>, answe
     subsets_with_dup_meta(nums, ind_temp, curr, answer);
 }
 
-/// This is the solution to leetcode problem 91. Decode Ways. 
-/// 
+/// This is the solution to leetcode problem 91. Decode Ways.
+///
 /// A message containing letters from A-Z can be encoded into numbers using the following mapping: 'A' -> "1", 'B' -> "2", ..., 'Z' -> "26". Given a string s containing only digits, return the number of ways to decode it.
-/// 
+///
 /// **Dynamic Programming** is used, thus time complexity O(n) and space complexity O(n).
 pub fn num_decodings(s: String) -> i32 {
     if s.len() == 0 || s.starts_with("0") {
         return 0;
     }
     let sv: Vec<char> = s.chars().rev().collect();
-    let mut dp = vec![0; sv.len()+1];
+    let mut dp = vec![0; sv.len() + 1];
     dp[0] = 1;
     if sv[0] != '0' {
         dp[1] = 1;
     }
-    for i in 2..(sv.len()+1) {
-        let nxt1 = sv[i-2];
-        let nxt2 = sv[i-1];
+    for i in 2..(sv.len() + 1) {
+        let nxt1 = sv[i - 2];
+        let nxt2 = sv[i - 1];
         println!("{}, {}", nxt1, nxt2);
         if nxt2 != '0' {
-            dp[i] += dp[i-1];
+            dp[i] += dp[i - 1];
         }
         let temp = (nxt2 as u8 - '0' as u8) * 10 + (nxt1 as u8 - '0' as u8);
         println!("temp={}", temp);
         if temp >= 10 && temp <= 26 {
-            dp[i] += dp[i-2];
+            dp[i] += dp[i - 2];
         }
         println!("{:?}", dp);
     }
     dp[sv.len()]
+}
+
+/// This is the solution to leetcode problem 93. Restore IP Addresses.
+pub fn restore_ip_addresses(s: String) -> Vec<String> {
+    if s.len() > 12 || s.len() < 4 {
+        return Vec::new();
+    }
+    let partition = calculate_ip_partition(s.len());
+    let mut ans = Vec::new();
+    for pt in partition.into_iter() {
+        let tmp = ip_string_by_slicing(&s, pt);
+        if tmp.is_empty() {
+        } else {
+            ans.push(tmp);
+        }
+    }
+    ans
+}
+
+/// This is the tool function to calculate all the possible partitions of a string of length n into 4 parts, where each part can have a length of 1 to 3.
+fn calculate_ip_partition(n: usize) -> Vec<Vec<usize>> {
+    assert!(n >= 4 && n <= 12);
+    let mut res = Vec::new();
+    for i in 1..=3 {
+        for j in 1..=3 {
+            for k in 1..=3 {
+                let temp = n as isize - i as isize - j as isize - k as isize;
+                if temp <= 3 && temp >= 1 {
+                    res.push(vec![i, j, k, temp as usize]);
+                }
+            }
+        }
+    }
+    res
+}
+
+/// This is the tool function to generate an IP address string from a given string and a slicing vector. The slicing vector contains the lengths of each part of the IP address. 
+/// 
+/// The function checks if each part is valid (i.e., not starting with '0' unless it's '0', and not greater than 255) and constructs the IP address string accordingly.
+fn ip_string_by_slicing(s: &String, slicing: Vec<usize>) -> String {
+    let mut carrier = Vec::new();
+    let mut temp = Vec::new();
+    let mut nxt = slicing.into_iter();
+    let mut ind = nxt.next().unwrap();
+    for (i, it) in s.char_indices() {
+        temp.push(it);
+        if i == ind - 1 {
+            if temp[0] == '0' && temp.len() > 1 {
+                return String::new();
+            }
+            let mut bs = 1;
+            let mut res = 0;
+            while let Some(n) = temp.pop() {
+                res += bs * n.to_digit(10).unwrap();
+                bs *= 10;
+            }
+            if res > 255 {
+                return String::new();
+            }
+            carrier.push(res);
+            ind += nxt.next().unwrap_or(usize::MAX - 12);
+        }
+    }
+    let mut temp = String::new();
+    let n = carrier.len();
+    for (i, it) in carrier.into_iter().enumerate() {
+        temp.push_str(&(it.to_string()));
+        if i < n - 1 {
+            temp.push('.');
+        }
+    }
+    temp
+}
+
+/// This is the solution to leetcode problem 85. Maximal Rectangle. 
+/// 
+/// **[WARNING]** This implementation is too slow and will cause TLE (Time Limit Exceeded) on large inputs. It is a brute-force approach that checks all possible rectangles in the matrix, which is inefficient for large matrices.
+pub fn maximal_rectangle_tle(matrix: Vec<Vec<char>>) -> i32 {
+    let (m, n) = (matrix.len(), matrix[0].len());
+    let (mut pm, mut pn) = (0, 0);
+    let mut max_area = 0;
+    while pm < m {
+        //println!("[INFO] This is pm={pm}, pn={pn}");
+        if matrix[pm][pn] != '0' {
+            let mut area;
+            let (pn_begin, pm_begin) = (pn, pm);
+            let pn_end;
+            while pn < n && matrix[pm][pn] == '1' {
+                pn += 1;
+            }
+            pn_end = pn;
+            assert!(pn_end <= n);
+            let mut pm_inner = pm + 1;
+            for pni in ((pn_begin+1)..(pn_end+1)).rev() {
+                //println!("This is range {}..{}", pn_begin, pni);
+                area = (pni - pn_begin) as i32;
+                while pm_inner < m {
+                    //println!("{:?}", matrix[pm_inner][pn_begin..pni].contains(&'0'));
+                    if matrix[pm_inner][pn_begin..pni].contains(&'0') {
+                        break;
+                    } else {
+                        area += (pni - pn_begin) as i32;
+                    }
+                    pm_inner += 1;
+                }
+                max_area = max_area.max(area);
+                if max_area as usize == m*n {
+                    return max_area;
+                }
+                pm_inner = pm + 1;
+                //println!("[DEBUG] Update: max={max_area} against {area}");
+            }
+            pm = pm_begin;
+            pn = pn_begin;
+        }
+        pn += 1;
+        if pn >= n {
+            pn = 0;
+            pm += 1;
+        }
+    }
+    max_area
+}
+
+/// This is the solution to problem 84 and we reuse it to solve problem 85, but taking the reference of the histogram.
+pub fn largest_rectangle_area_referred(heights: &Vec<i32>) -> i32 {
+    let n = heights.len();
+    let mut stack = Vec::new();
+    let mut area = 0i32;
+
+    for (i, &h) in heights.iter().enumerate() {
+        let mut start = i;
+        while let Some(&(hindex, hnew)) = stack.last() {
+            if h < hnew {
+                stack.pop();
+                let temp = (i - hindex) as i32 * hnew;
+                area = area.max(temp);
+                start = hindex;
+            } else {
+                break;
+            }
+        }
+        stack.push((start, h));
+    }
+    while let Some((hindex, h)) = stack.pop() {
+        let temp = (n - hindex) as i32 * h;
+        area = area.max(temp)
+    }
+    area
+}
+
+/// This is the solution to leetcode problem 85. Maximal Rectangle.
+pub fn maximal_rectangle(matrix: Vec<Vec<char>>) -> i32 {
+    let (m, n) = (matrix.len(), matrix[0].len());
+    let mut hs: Vec<i32> = vec![0; n];
+    let mut max_area = 0;
+    for i in 0..m {
+        for j in 0..n {
+            if matrix[i][j] == '1' {
+                hs[j] += 1;
+            } else {
+                hs[j] = 0;
+            }
+        }
+        max_area = max_area.max(largest_rectangle_area_referred(&hs))
+    }
+    max_area
+}
+
+/// This is the solution to leetcode problem 135. Candy. 
+pub fn candy(ratings: Vec<i32>) -> i32 {
+    let n = ratings.len();
+    let mut i = 1;
+    let mut candies = n as i32;
+    let mut num_curr = 0;
+    let mut temp = Vec::new();
+    while i < n {
+        println!("this is {i}");
+        if ratings[i] == ratings[i - 1] {
+            i += 1;
+            temp.push(0);
+            continue;
+        }
+        let curr_max;
+        while i < n && ratings[i] > ratings[i - 1] {
+            num_curr += 1;
+            candies += num_curr;
+            temp.push(num_curr);
+            i += 1;
+        }
+        curr_max = num_curr;
+        if i == n {
+            return candies;
+        }
+        num_curr = 0;
+        let curr_min;
+        while i < n && ratings[i] < ratings[i - 1] {
+            num_curr += 1;
+            candies += num_curr;
+            temp.push(num_curr);
+            i += 1;
+        }
+        curr_min = num_curr;
+        candies -= curr_max.min(curr_min);
+        num_curr = 0;
+    }
+    candies
 }
 
 #[cfg(test)]
@@ -617,40 +843,40 @@ mod test_module {
 
     #[test]
     fn test_largest_rectangle_area() {
-        let v = vec![2,4,2,6,4,2,1,7,6,3,2,1,2,1,3];
+        let v = vec![2, 4, 2, 6, 4, 2, 1, 7, 6, 3, 2, 1, 2, 1, 3];
         largest_rectangle_area(v);
     }
 
     #[test]
     fn test_merge_sorted_array() {
-        let mut v1 = vec![1,3,6,10,0,0,0];
-        let mut v2 = vec![2,2,4];
+        let mut v1 = vec![1, 3, 6, 10, 0, 0, 0];
+        let mut v2 = vec![2, 2, 4];
         merge(&mut v1, 4, &mut v2, 3);
         println!("{:?}", v1);
     }
 
     #[test]
     fn test_merge_sorted_array_2() {
-        let mut v1 = vec![2,0];
+        let mut v1 = vec![2, 0];
         let mut v2 = vec![1];
         merge(&mut v1, 1, &mut v2, 1);
-        assert_eq!(vec![1,2], v1);
+        assert_eq!(vec![1, 2], v1);
     }
 
     #[test]
     fn test_merge_sorted_array_3() {
-        let mut v1 = vec![-1,0,0,3,3,3,0,0,0];
-        let mut v2 = vec![1,2,2];
+        let mut v1 = vec![-1, 0, 0, 3, 3, 3, 0, 0, 0];
+        let mut v2 = vec![1, 2, 2];
         merge(&mut v1, 6, &mut v2, 3);
-        assert_eq!(vec![-1,0,0,1,2,2,3,3,3], v1);
+        assert_eq!(vec![-1, 0, 0, 1, 2, 2, 3, 3, 3], v1);
     }
 
     #[test]
     fn test_merge_sorted_array_4() {
-        let mut v1 = vec![0,0,3,0,0,0,0,0,0,0,0];
-        let mut v2 = vec![-3,-2,-1,1,1,1,2,3];
+        let mut v1 = vec![0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0];
+        let mut v2 = vec![-3, -2, -1, 1, 1, 1, 2, 3];
         merge(&mut v1, 3, &mut v2, 8);
-        assert_eq!(vec![-3,-2,-1,0,0,1,1,1,2,3,3], v1);
+        assert_eq!(vec![-3, -2, -1, 0, 0, 1, 1, 1, 2, 3, 3], v1);
     }
 
     #[test]
@@ -660,7 +886,7 @@ mod test_module {
 
     #[test]
     fn notest_subsets_with_dup() {
-        let v = vec![1,2,2,3];
+        let v = vec![1, 2, 2, 3];
         println!("{:?}", subsets_with_dup(v));
     }
 
@@ -678,15 +904,102 @@ mod test_module {
 
     #[test]
     //#[should_panic]
-    fn test_num_decodings_3 () {
+    fn test_num_decodings_3() {
         let s = String::from("2224");
         assert_eq!(num_decodings(s), 5);
     }
 
     #[test]
     //#[should_panic]
-    fn test_num_decodings_4 () {
+    fn test_num_decodings_4() {
         let s = String::from("2101");
         assert_eq!(num_decodings(s), 1);
     }
+
+    #[test]
+    fn notest_calculate_ip_partition() {
+        println!("{:?}", calculate_ip_partition(6));
+    }
+
+    #[test]
+    fn notest_ip_string_by_slicing() {
+        let slicing = vec![3, 1, 1, 1];
+        println!("{:?}", ip_string_by_slicing(&("211053".into()), slicing));
+    }
+
+    #[test]
+    fn notest_restore_ip_address() {
+        let ipstr: String = "25525511135".into();
+        println!("{:?}", restore_ip_addresses(ipstr));
+    }
+
+    #[test]
+    fn test_candy() {
+        let rt = vec![1, 4, 5, 5, 5, 3, 3, 3, 2, 2, 3, 6];
+        assert_eq!(candy(rt), 20);
+    }
+
+    #[test]
+    fn test_candy_1() {
+        let rt = vec![2, 0, 1];
+        assert_eq!(candy(rt), 5);
+    }
+
+    #[test]
+    fn test_candy_2() {
+        let rt = vec![1, 2, 2];
+        assert_eq!(candy(rt), 4);
+    }
+
+    #[test]
+    fn test_candy_3() {
+        let rt = vec![2, 4, 6, 7, 3, 2];
+        assert_eq!(candy(rt), 13);
+    }
+
+    #[test]
+    fn test_maximal_ractangle() {
+        let mat = vec![
+            vec!['1', '0', '1', '0', '0'],
+            vec!['1', '0', '1', '1', '1'],
+            vec!['1', '1', '1', '1', '1'],
+            vec!['1', '0', '0', '1', '0'],
+        ];
+        assert_eq!(maximal_rectangle(mat), 6);
+    }
+
+    #[test]
+    fn test_maximal_ractangle_2() {
+        let mat = vec![
+            vec!['0','1','1','1','1','1','1','1'],
+            vec!['1','1','1','1','1','1','1','0'],
+            vec!['1','1','1','1','1','1','1','0'],
+            vec!['1','1','1','1','1','0','0','0'],
+            vec!['0','1','1','1','1','0','0','0']
+        ];
+        assert_eq!(maximal_rectangle(mat), 20);
+    }
+
+    #[test]
+    fn test_maximal_ractangle_3() {
+        let mat = vec![
+            vec!['0','0','1','0'],
+            vec!['1','1','1','1'],
+            vec!['1','1','1','1'],
+            vec!['1','1','1','0'],
+            vec!['1','1','0','0'],
+            vec!['1','1','1','1'],
+            vec!['1','1','1','0']
+        ];
+        assert_eq!(12, maximal_rectangle(mat));
+    }
+
+    /* 
+    ["1","0","1","1","0","1"],
+    ["1","1","1","1","1","1"],
+    ["0","1","1","0","1","1"],
+    ["1","1","1","0","1","0"],
+    ["0","1","1","1","1","1"],
+    ["1","1","0","1","1","1"]]
+    */
 }
