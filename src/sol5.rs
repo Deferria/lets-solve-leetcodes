@@ -1,3 +1,5 @@
+use std::vec;
+
 use crate::collections::ListNode;
 
 /// This is the inner recursion function for the leetcode problem 77. Combinations to combine numbers from `start` to `n` with `k` numbers. `curr` and `res` are used to execute side-effects.
@@ -618,7 +620,8 @@ fn ip_string_by_slicing(s: &String, slicing: Vec<usize>) -> String {
 
 /// This is the solution to leetcode problem 85. Maximal Rectangle. 
 /// 
-/// **[WARNING]** This implementation is too slow and will cause TLE (Time Limit Exceeded) on large inputs. It is a brute-force approach that checks all possible rectangles in the matrix, which is inefficient for large matrices.
+/// **[WARNING]** This implementation is too slow and may cause TLE (Time Limit Exceeded) on large inputs. It is a brute-force approach that checks all possible rectangles in the matrix, which is inefficient for large matrices.
+#[deprecated]
 pub fn maximal_rectangle_tle(matrix: Vec<Vec<char>>) -> i32 {
     let (m, n) = (matrix.len(), matrix[0].len());
     let (mut pm, mut pn) = (0, 0);
@@ -778,6 +781,51 @@ pub fn candy(ratings: Vec<i32>) -> i32 {
         num_curr = 0;
     }
     candies
+}
+
+/// This is the solution to leetcode problem 274. H-Index. Given an array of integers citations where citations[i] is the number of citations a researcher received for their ith paper, return compute the researcher's h-index.
+/// 
+/// H-index means that the researcher has h papers with at least h citations each, and the other papers have no more than h citations each. The function sorts the citations in descending order and iterates through them to find the maximum h-index.
+/// 
+/// This implementation first sorts the list in descending order and then iterates to find the largest index where the number of citations is greater than or equal to the index + 1. The result is the minimum of this index and the total number of papers.
+/// 
+/// - Time complexity: O(n log n) due to sorting
+/// - Space complexity: O(1)
+pub fn h_index(mut citations: Vec<i32>) -> i32 {
+    citations.sort_by(|a, b| b.cmp(a));
+    let n = citations.len() as i32;
+    let mut a = *citations.last().unwrap();
+    for (id, it) in citations.into_iter().enumerate() {
+        if (id as i32) > it - 1 {
+            a = id as i32;
+            break;
+        }
+    }
+    a.min(n)
+}
+
+/// This is another implementation of the solution to leetcode problem 274. H-Index. 
+/// 
+/// - Time complexity: O(n)
+/// - Space complexity: O(n) due to recording the counts of citations
+pub fn h_index_2(citations: Vec<i32>) -> i32 {
+    let n = citations.len();
+    let mut temp = vec![0; n+1];
+    for it in citations.into_iter() {
+        if it > n as i32 {
+            temp[n] += 1;
+        } else {
+            temp[it as usize] += 1;
+        }
+    }
+    let mut ans = 0;
+    for (i, it) in temp.into_iter().enumerate().rev() {
+        ans += it;
+        if ans >= i as i32 {
+            return i as i32;
+        }
+    }
+    return 0;
 }
 
 #[cfg(test)]
@@ -1036,5 +1084,15 @@ mod test_module {
     #[test]
     fn test_interleave_string() {
         assert_eq!(is_interleave("dbbca".into(), "aabcc".into(), "aadbbcbcac".into()), true);
+    }
+
+    #[test]
+    fn test_h_index() {
+        assert_eq!(h_index(vec![1,3,1]), 1);
+    }
+
+    #[test]
+    fn test_h_index_2() {
+        assert_eq!(h_index(vec![1]), 1);
     }
 }

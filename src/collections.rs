@@ -89,7 +89,7 @@ impl TreeNode {
 
 impl TreeNode {
     /// Create a binary tree from a vector of Option<i32> values, where None represents a missing node. Return the root of the tree.
-    pub fn from_vec(arr: &[Option<i32>]) -> Option<Rc<RefCell<TreeNode>>> {
+    pub fn root_from_vec(arr: &[Option<i32>]) -> Option<Rc<RefCell<TreeNode>>> {
         if arr.is_empty() || arr[0].is_none() {
             return None;
         }
@@ -119,5 +119,33 @@ impl TreeNode {
         }
         queue.clear();
         Some(rt)
+    }
+}
+
+impl TreeNode {
+    /// Convert a binary tree to a vector of Option<i32> values, where None represents a missing node. The vector is in level-order traversal.
+    pub fn root_to_vec(root: &Option<Rc<RefCell<TreeNode>>>) -> Vec<Option<i32>> {
+        let mut result = Vec::new();
+        if root.is_none() {
+            return result;
+        }
+        let mut queue = VecDeque::new();
+        queue.push_back(root.clone());
+        while !queue.is_empty() {
+            let curr = queue.pop_front().unwrap();
+            if let Some(node) = curr {
+                let node_ref = node.borrow();
+                result.push(Some(node_ref.val));
+                queue.push_back(node_ref.left.clone());
+                queue.push_back(node_ref.right.clone());
+            } else {
+                result.push(None);
+            }
+        }
+        // Remove trailing None values
+        while let Some(None) = result.last() {
+            result.pop();
+        }
+        result
     }
 }
