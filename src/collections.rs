@@ -1,3 +1,7 @@
+use std::collections::VecDeque;
+use std::cell::RefCell;
+use std::rc::Rc;
+
 // Definition for singly-linked list.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct ListNode {
@@ -62,5 +66,58 @@ impl std::fmt::Display for ListNode {
             first = false;
         }
         Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+
+impl TreeNode {
+    #[inline]
+    pub fn new(val: i32) -> Self {
+        TreeNode {
+            val,
+            left: None,
+            right: None
+        }
+    }
+}
+
+impl TreeNode {
+    /// Create a binary tree from a vector of Option<i32> values, where None represents a missing node. Return the root of the tree.
+    pub fn from_vec(arr: &[Option<i32>]) -> Option<Rc<RefCell<TreeNode>>> {
+        if arr.is_empty() || arr[0].is_none() {
+            return None;
+        }
+        let rt_val = arr[0].unwrap();
+        let rt = Rc::new(RefCell::new(TreeNode::new(rt_val)));
+        let mut queue = VecDeque::new();
+        queue.push_back(Rc::clone(&rt));
+        let mut i = 1;
+        while !queue.is_empty() && i<arr.len() {
+            let curr = queue.pop_front().unwrap();
+            if i < arr.len() {
+                if let Some(t) = arr[i] {
+                    let left_node = Rc::new(RefCell::new(TreeNode::new(t)));
+                    curr.borrow_mut().left = Some(Rc::clone(&left_node));
+                    queue.push_back(left_node);
+                }
+                i += 1
+            }
+            if i < arr.len() {
+                if let Some(t) = arr[i] {
+                    let right_node = Rc::new(RefCell::new(TreeNode::new(t)));
+                    curr.borrow_mut().right = Some(Rc::clone(&right_node));
+                    queue.push_back(right_node);
+                }
+                i += 1
+            }
+        }
+        queue.clear();
+        Some(rt)
     }
 }

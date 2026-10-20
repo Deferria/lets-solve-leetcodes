@@ -407,6 +407,7 @@ pub fn largest_rectangle_area(heights: Vec<i32>) -> i32 {
             }
         }
         stack.push((start, h));
+        //dbg!(&stack);
     }
     while let Some((hindex, h)) = stack.pop() {
         let temp = (n - hindex) as i32 * h;
@@ -668,7 +669,7 @@ pub fn maximal_rectangle_tle(matrix: Vec<Vec<char>>) -> i32 {
 /// This is the solution to problem 84 and we reuse it to solve problem 85, but taking the reference of the histogram.
 pub fn largest_rectangle_area_referred(heights: &Vec<i32>) -> i32 {
     let n = heights.len();
-    let mut stack = Vec::new();
+    let mut stack = Vec::new(); 
     let mut area = 0i32;
 
     for (i, &h) in heights.iter().enumerate() {
@@ -708,6 +709,35 @@ pub fn maximal_rectangle(matrix: Vec<Vec<char>>) -> i32 {
         max_area = max_area.max(largest_rectangle_area_referred(&hs))
     }
     max_area
+}
+
+/// This is the solution to leetcode problem 97. Interleaving String. Given strings s1, s2, and s3, determine whether s3 is formed by an interleaving of s1 and s2.
+/// 
+/// Dynamic programming is used to solve this problem. We create a 2D boolean array `dp` where `dp[i][j]` indicates whether the first `i` characters of `s1` and the first `j` characters of `s2` can form the first `i+j` characters of `s3`. The solution iterates through all combinations of lengths of `s1` and `s2`, updating the `dp` array based on character matches with `s3`.
+/// The answer lies in `dp[m][n]` where `m` is the length of `s1` and `n` is the length of `s2`.
+pub fn is_interleave(s1: String, s2: String, s3: String) -> bool {
+    let s1_v: Vec<char> = s1.chars().collect();
+    let s2_v: Vec<char> = s2.chars().collect();
+    let s3_v: Vec<char> = s3.chars().collect();
+    let (m, n) = (s1.len(), s2.len());
+    if s3.len() != m + n {
+        return false;
+    }
+    let mut dp = vec![vec![false; n+1]; m+1];
+    for i in 0..(m+1) {
+        for j in 0..(n+1) {
+            if i == 0 && j == 0 {
+                dp[i][j] = true
+            } else if i>0 && j == 0 {
+                dp[i][j] = dp[i-1][j] && s3_v[i-1] == s1_v[i-1];
+            } else if j>0 && i == 0 {
+                dp[i][j] = dp[i][j-1] && s3_v[j-1] == s2_v[j-1];
+            } else {
+                dp[i][j] = (dp[i][j-1] && s3_v[i+j-1] == s2_v[j-1]) || (dp[i-1][j] && s3_v[i+j-1] == s1_v[i-1]);
+            }
+        }
+    }
+    dp[m][n]
 }
 
 /// This is the solution to leetcode problem 135. Candy. 
@@ -844,7 +874,7 @@ mod test_module {
     #[test]
     fn test_largest_rectangle_area() {
         let v = vec![2, 4, 2, 6, 4, 2, 1, 7, 6, 3, 2, 1, 2, 1, 3];
-        largest_rectangle_area(v);
+        println!("{}", largest_rectangle_area(v));
     }
 
     #[test]
@@ -1002,4 +1032,9 @@ mod test_module {
     ["0","1","1","1","1","1"],
     ["1","1","0","1","1","1"]]
     */
+
+    #[test]
+    fn test_interleave_string() {
+        assert_eq!(is_interleave("dbbca".into(), "aabcc".into(), "aadbbcbcac".into()), true);
+    }
 }

@@ -4,6 +4,7 @@ pub mod sol3;
 pub mod sol4;
 pub mod sol5;
 pub mod sol6;
+pub mod sol7;
 
 pub mod collections;
 pub mod forfun;
