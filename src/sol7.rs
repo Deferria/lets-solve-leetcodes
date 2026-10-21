@@ -1,9 +1,9 @@
-#![allow(deprecated)]
+#![allow(deprecated, unused_variables)]
 use crate::collections::TreeNode;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use std::collections::HashMap;
+use std::collections::{ HashMap, VecDeque };
 
 /// This is the solution to leetcode problem 94. Binary Tree Inorder Traversal. Given the root of a binary tree, return the inorder traversal of its nodes' values.
 pub fn inorder_traversal(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {
@@ -12,12 +12,30 @@ pub fn inorder_traversal(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {
     ans
 }
 
-fn inorder_traversal_recursive(rt: &Option<Rc<RefCell<TreeNode>>>, res: &mut Vec<i32>) {
+pub fn inorder_traversal_recursive(rt: &Option<Rc<RefCell<TreeNode>>>, res: &mut Vec<i32>) {
     if let Some(t) = rt {
         let node_ref = t.borrow();
         inorder_traversal_recursive(&node_ref.left, res);
         res.push(node_ref.val);
         inorder_traversal_recursive(&node_ref.right, res);
+    }
+}
+
+pub fn preorder_traversal_recursive(rt: &Option<Rc<RefCell<TreeNode>>>, res: &mut Vec<i32>) {
+    if let Some(t) = rt {
+        let node_ref = t.borrow();
+        res.push(node_ref.val);
+        preorder_traversal_recursive(&node_ref.left, res);
+        preorder_traversal_recursive(&node_ref.right, res);
+    }
+}
+
+pub fn postorder_traversal_recursive(rt: &Option<Rc<RefCell<TreeNode>>>, res: &mut Vec<i32>) {
+    if let Some(t) = rt {
+        let node_ref = t.borrow();
+        postorder_traversal_recursive(&node_ref.left, res);
+        postorder_traversal_recursive(&node_ref.right, res);
+        res.push(node_ref.val);
     }
 }
 
@@ -205,6 +223,211 @@ fn recover_tree_inner(node: Option<Rc<RefCell<TreeNode>>>, prev: &mut Option<Rc<
     }
 }
 
+/// This is the solution to the Leetcode problem 100. Same Tree. 
+pub fn is_same_tree(p: Option<Rc<RefCell<TreeNode>>>, q: Option<Rc<RefCell<TreeNode>>>) -> bool {
+    is_same_tree_inner(&p, &q)
+}
+
+/// The inner function for checking if two binary trees are the same. It compares the values of the current nodes and recursively checks the left and right subtrees. 
+fn is_same_tree_inner(p: &Option<Rc<RefCell<TreeNode>>>, q: &Option<Rc<RefCell<TreeNode>>>) -> bool {
+    if p.is_none() && q.is_none() {
+        return true;
+    }
+    if let (Some(pnode), Some(qnode)) = (p, q) {
+        if pnode.borrow().val != qnode.borrow().val {
+            return false;
+        }
+        return is_same_tree_inner(&pnode.borrow().left, &qnode.borrow().left) && is_same_tree_inner(&pnode.borrow().right, &qnode.borrow().right);
+    }
+    return false;
+}
+
+/// This is the solution to the Leetcode problem 101. Symmetric Tree.
+pub fn is_symmetric(root: Option<Rc<RefCell<TreeNode>>>) -> bool {
+    if root.as_ref().is_none() { return true; }
+    let rt = root.unwrap();
+    let (ltree, rtree) = (&rt.borrow().left, &rt.borrow().right);
+    return is_symmetric_inner(ltree, rtree);
+}
+
+/// The inner function for checking if two binary trees are mirror images of each other. It compares the values of the current nodes and recursively checks the left subtree of one tree against the right subtree of the other tree, and vice versa.
+fn is_symmetric_inner(p: &Option<Rc<RefCell<TreeNode>>>, q: &Option<Rc<RefCell<TreeNode>>>) -> bool {
+    if p.is_none() && q.is_none() {
+        return true;
+    }
+    if let (Some(pnode), Some(qnode)) = (p, q) {
+        if pnode.borrow().val != qnode.borrow().val {
+            return false;
+        }
+        return is_same_tree_inner(&pnode.borrow().left, &qnode.borrow().right) && is_same_tree_inner(&pnode.borrow().right, &qnode.borrow().left);
+    }
+    return false;
+}
+
+/// This is the solution to the Leetcode problem 102. Binary Tree Level Order Traversal. Given the root of a binary tree, return the level order traversal of its nodes' values. (i.e., from left to right, level by level).
+pub fn level_order(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<Vec<i32>> {
+    let mut answer = Vec::new();
+    if root.is_none() { return answer; }
+    let mut queue = VecDeque::new();
+    queue.push_back(root.unwrap().clone());
+    let mut n_prev = 1;
+    let mut n = 0;
+    let mut n_next = 0;
+    let mut temp = Vec::new();
+    while !queue.is_empty() {
+        let node = queue.pop_front().unwrap();
+        n += 1;
+        
+        let node_ref = node.borrow();
+        temp.push(node_ref.val);
+        if node_ref.left.as_ref().is_some() {
+            queue.push_back(node_ref.left.clone().unwrap());
+            n_next += 1;
+        }
+        if node_ref.right.as_ref().is_some() {
+            queue.push_back(node_ref.right.clone().unwrap());
+            n_next += 1;
+        }
+        if n == n_prev {
+            answer.push(temp.clone());
+            temp.clear();
+            n_prev = n_next;
+            n_next = 0;
+            n = 0;
+        }
+    }
+    assert!(n_next == 0);
+    answer
+}
+
+/// This is the solution to the Leetcode problem 103. Binary Tree Zigzag Level Order Traversal. Given the root of a binary tree, return the zigzag level order traversal of its nodes' values. (i.e., from left to right, then right to left for the next level and alternate between).
+pub fn zigzag_level_order(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<Vec<i32>> {
+    let mut answer = Vec::new();
+    if root.is_none() { return answer; }
+    let mut queue = VecDeque::new();
+    queue.push_back(root.unwrap().clone());
+    let mut is_reverse = false;
+    while !queue.is_empty() {
+        let mut temp = Vec::new();
+        let n = queue.len();
+        for _ in 0..n {
+            let node = queue.pop_front().unwrap();
+            let node_ref = node.borrow();
+            temp.push(node_ref.val);
+            if node_ref.left.as_ref().is_some() {
+                queue.push_back(node_ref.left.clone().unwrap());
+            }
+            if node_ref.right.as_ref().is_some() {
+                queue.push_back(node_ref.right.clone().unwrap());
+            }
+        }
+        if is_reverse {
+            temp.reverse();
+        }
+        answer.push(temp.to_vec());
+        is_reverse = !is_reverse;
+    }
+    answer
+}
+
+/// This is the solution to the Leetcode problem 104. Maximum Depth of Binary Tree. Given the root of a binary tree, return its maximum depth.
+pub fn max_depth(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
+    max_depth_inorder_traversal_recursive(&root, 0, 0)
+}
+
+pub fn max_depth_inorder_traversal_recursive(rt: &Option<Rc<RefCell<TreeNode>>>, max_curr: i32, curr: i32) -> i32 {
+    if let Some(t) = rt {
+        let node_ref = t.borrow();
+        let n1 = max_depth_inorder_traversal_recursive(&node_ref.left, max_curr, curr+1);
+        let n2 = max_depth_inorder_traversal_recursive(&node_ref.right, max_curr, curr+1);
+        return n1.max(n2);
+    } else {
+        return max_curr.max(curr);
+    }
+}
+
+/// This is the solution to the Leetcode problem 105. Construct Binary Tree from Preorder and Inorder Traversal. Given two integer arrays preorder and inorder where preorder is the preorder traversal of a binary tree and inorder is the inorder traversal of the same tree, construct and return the binary tree.
+pub fn build_tree(preorder: Vec<i32>, inorder: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {
+    let mut memo = HashMap::new();
+    for (i, it) in inorder.into_iter().enumerate() {
+        memo.insert(it, i as isize);
+    }
+    let mut preorder_iter = preorder.iter();
+    build_tree_recursive(&mut preorder_iter, &memo, 0, preorder.len() as isize -1)
+}
+
+fn build_tree_recursive(preorder: &mut std::slice::Iter<i32>, memo: &HashMap<i32, isize>, start: isize, end: isize) -> Option<Rc<RefCell<TreeNode>>> {
+    if start <= end {
+        if let Some(&val) = preorder.next() {
+            if let Some(&i) = memo.get(&val) {
+                let root = Rc::new(RefCell::new(TreeNode {
+                    val: val,
+                    left: build_tree_recursive(preorder, memo, start, i-1),
+                    right: build_tree_recursive(preorder, memo, i+1, end)
+                }));
+                return Some(root);
+            }
+        }
+    }
+    None
+}
+
+/// This is the solution to the Leetcode problem 106. Construct Binary Tree from Inorder and Postorder Traversal. 
+pub fn build_tree_postorder(inorder: Vec<i32>, postorder: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {
+    let mut memo = HashMap::new();
+    for (i, it) in inorder.into_iter().enumerate() {
+        memo.insert(it, i as isize);
+    }
+    let mut postorder_iter = postorder.iter().rev();
+    build_tree_recursive_postorder(&mut postorder_iter, &memo, 0, postorder.len() as isize -1)
+}
+
+fn build_tree_recursive_postorder(postorder: &mut std::iter::Rev<std::slice::Iter<i32>>, memo: &HashMap<i32, isize>, start: isize, end: isize) -> Option<Rc<RefCell<TreeNode>>> {
+    if start <= end {
+        if let Some(&val) = postorder.next() {
+            if let Some(&i) = memo.get(&val) {
+                let root = Rc::new(RefCell::new(TreeNode {
+                    val: val,
+                    right: build_tree_recursive_postorder(postorder, memo, i+1, end),
+                    left: build_tree_recursive_postorder(postorder, memo, start, i-1)
+                }));
+                return Some(root);
+            }
+        }
+    }
+    None
+}
+
+/// This is the solution to the Leetcode problem 107. Binary Tree Level Order Traversal II. Given the root of a binary tree, return the bottom-up level order traversal of its nodes' values. (i.e., from left to right, level by level from leaf to root).
+/// 
+/// This is a light-hearted implementation, for it reuses the `level_order` function and simply reverses the result. 
+pub fn level_order_bottom(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<Vec<i32>> {
+    let mut answer = Vec::new();
+    if root.is_none() { return answer; }
+    let mut queue = VecDeque::new();
+    queue.push_back(root.unwrap().clone());
+    while !queue.is_empty() {
+        let n = queue.len();
+        let mut temp = Vec::new();
+        
+        for _ in 0..n {
+            let node = queue.pop_front().unwrap();
+            let node_ref = node.borrow();
+            temp.push(node_ref.val);
+            if node_ref.left.as_ref().is_some() {
+                queue.push_back(node_ref.left.clone().unwrap());
+            }
+            if node_ref.right.as_ref().is_some() {
+                queue.push_back(node_ref.right.clone().unwrap());
+            }
+        }
+        
+        answer.push(temp.clone());
+    }
+    answer.reverse();
+    answer
+}
+
 #[cfg(test)]
 mod test_module {
     use super::*;
@@ -303,5 +526,92 @@ mod test_module {
         recover_tree(&mut root);
         let after = TreeNode::root_to_vec(&root);
         println!("{after:?}");
+    }
+
+    #[test]
+    fn test_is_same_tree() {
+        let arr1 = [Some(7), Some(2), Some(6), Some(1), Some(3), None, Some(4), None, None, None, None, None, Some(9)];
+        let arr2 = [Some(7), Some(2), Some(6), Some(1), Some(3), None, Some(4), None, None, None, None, None, Some(9)];
+        let (r1, r2) = (TreeNode::root_from_vec(&arr1), TreeNode::root_from_vec(&arr2));
+        assert_eq!(true, is_same_tree(r1, r2));
+    }
+
+    #[test]
+    fn test_is_same_tree_2() {
+        let arr1 = [None];
+        let arr2 = [Some(7), Some(2), Some(6), Some(1), Some(3), None, Some(4), None, None, None, None, None, Some(9)];
+        let (r1, r2) = (TreeNode::root_from_vec(&arr1), TreeNode::root_from_vec(&arr2));
+        assert_eq!(false, is_same_tree(r1, r2));
+    }
+
+    #[test]
+    fn test_is_same_tree_3() {
+        let arr1 = [Some(7), Some(1), Some(2)];
+        let arr2 = [Some(7), Some(2), Some(1)];
+        let (r1, r2) = (TreeNode::root_from_vec(&arr1), TreeNode::root_from_vec(&arr2));
+        assert_eq!(false, is_same_tree(r1, r2));
+    }
+
+    #[test]
+    fn test_is_symmetric_tree() {
+        let arr = [Some(0), Some(7), Some(7), Some(2), Some(1), Some(1), Some(2)];
+        let rt = TreeNode::root_from_vec(&arr);
+        assert_eq!(true, is_symmetric(rt));
+    }
+
+    #[test]
+    fn test_level_order_traversal() {
+        let arr = [Some(0), Some(7), Some(7), Some(2), Some(1), Some(1), None, Some(7), None, Some(4)];
+        let rt = TreeNode::root_from_vec(&arr);
+        let v = level_order(rt);
+        println!("{:?}", v);
+    }
+
+    #[test]
+    fn test_level_order_traversal_2() {
+        let arr = [Some(0), Some(1), None, Some(2)];
+        let rt = TreeNode::root_from_vec(&arr);
+        let v = level_order(rt);
+        println!("{:?}", v);
+    }
+
+    #[test]
+    fn test_zigzag_level_order_traversal() {
+        let arr = [Some(0), Some(7), Some(7), Some(2), Some(1), Some(1), None, Some(7), None, Some(4)];
+        let rt = TreeNode::root_from_vec(&arr);
+        let v = zigzag_level_order(rt);
+        println!("{:?}", v);
+    }
+
+    #[test]
+    fn test_max_depth() {
+        let arr = [Some(0), Some(7), Some(7), Some(2), Some(1), Some(1), None, Some(7), None, Some(4)];
+        let rt = TreeNode::root_from_vec(&arr);
+        max_depth(rt);
+    }
+
+    #[test]
+    fn test_max_depth_2() {
+        let arr = [None];
+        let rt = TreeNode::root_from_vec(&arr);
+        assert_eq!(max_depth(rt), 0);
+    }
+
+    #[test]
+    fn test_build_tree() {
+        let p = vec![7, 2, 1, 0, 3, 6, 5, 9, 4];
+        let i = vec![1, 0, 2, 3, 7, 5, 9, 6, 4];
+        let root = build_tree(p, i);
+        let v = TreeNode::root_to_vec(&root);
+        assert_eq!(v, vec![Some(7), Some(2), Some(6), Some(1), Some(3), Some(5), Some(4), None, Some(0), None, None, None, Some(9)])
+    }
+
+    #[test]
+    fn test_build_tree_postorder() {
+        let p = vec![0, 1, 3, 2, 9, 5, 4, 6, 7];
+        let i = vec![1, 0, 2, 3, 7, 5, 9, 6, 4];
+        let root = build_tree_postorder(i, p);
+        let v = TreeNode::root_to_vec(&root);
+        assert_eq!(v, vec![Some(7), Some(2), Some(6), Some(1), Some(3), Some(5), Some(4), None, Some(0), None, None, None, Some(9)])
     }
 }
