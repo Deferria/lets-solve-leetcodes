@@ -1,5 +1,5 @@
 #![allow(deprecated, unused_variables)]
-use crate::collections::TreeNode;
+use crate::collections::{ TreeNode, ListNode };
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -428,6 +428,107 @@ pub fn level_order_bottom(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<Vec<i32>> 
     answer
 }
 
+/// This is the solution to the Leetcode problem 108. Convert Sorted Array to Binary Search Tree. Given an integer array nums where the elements are sorted in ascending order, convert it to a height-balanced binary search tree.
+pub fn sorted_array_to_bst(nums: Vec<i32>) -> Option<Rc<RefCell<TreeNode>>> {
+    sorted_to_bst_inner(&nums, 0, nums.len() as isize - 1)
+}
+
+fn sorted_to_bst_inner(nums: &Vec<i32>, start: isize, end: isize) -> Option<Rc<RefCell<TreeNode>>> {
+    if start > end {
+        return None;
+    }
+    let mid = (start + end) / 2;
+    let new_root = Rc::new(RefCell::new(TreeNode {
+        val: nums[mid as usize], 
+        left: sorted_to_bst_inner(nums, start, mid-1),
+        right: sorted_to_bst_inner(nums, mid+1, end)
+    }));
+    Some(new_root)
+}
+
+/// This is the solution to the Leetcode problem 109. Convert Sorted List to Binary Search Tree. Given the head of a singly linked list where elements are sorted in ascending order, convert it to a height-balanced binary search tree.
+/// 
+/// We choose to convert the linked list ot an array first and then reuse the `sorted_array_to_bst` function to construct the binary search tree. 
+pub fn sorted_list_to_bst(head: Option<Box<ListNode>>) -> Option<Rc<RefCell<TreeNode>>> {
+    let mut v = Vec::new();
+    linked_list_to_vec(&head, &mut v);
+    let n = v.len() as isize;
+    sorted_to_bst_inner(&v, 0, n-1)
+}
+
+fn linked_list_to_vec(node: &Option<Box<ListNode>>, res: &mut Vec<i32>) {
+    if let Some(n) = node {
+        res.push(n.val);
+        linked_list_to_vec(&n.next, res);
+    } else {
+        return;
+    }
+}
+
+/// This is the solution to the Leetcode problem 110. Balanced Binary Tree. Given a binary tree, determine if it is height-balanced.
+pub fn is_balanced(root: Option<Rc<RefCell<TreeNode>>>) -> bool {
+    return is_balanced_inner(&root) != -1;
+}
+
+fn is_balanced_inner(rt: &Option<Rc<RefCell<TreeNode>>>) -> i32 {
+    if let Some(node) = rt {
+        let n1 = is_balanced_inner(&node.borrow().left);
+        let n2 = is_balanced_inner(&node.borrow().right);
+        if n1 == -1 || n2 == -1 {
+            return -1;
+        } else if n1.abs_diff(n2) > 1 {
+            return -1;
+        } else {
+            return 1 + n1.max(n2);
+        }
+    } else {
+        return 0;
+    }
+}
+
+/// This is the solution to the Leetcode problem 111. Minimum Depth of Binary Tree. Given a binary tree, find its minimum depth.
+pub fn min_depth(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
+    get_tree_height(&root)
+}
+
+fn get_tree_height(rt: &Option<Rc<RefCell<TreeNode>>>) -> i32 {
+    if let Some(node) = rt {
+        let node_ref = node.borrow();
+        let n1 = get_tree_height(&node_ref.left);
+        let n2 = get_tree_height(&node_ref.right);
+        if n1 == 0 && n2 == 0 {
+            return 1;
+        } else if n1 != 0 && n2 != 0 {
+            return 1+n1.min(n2);
+        } else if n1 !=0 && n2 == 0 {
+            return 1+n1;
+        } else {
+            return 1+n2;
+        }
+    } else {
+        return 0;
+    }
+}
+
+/// This is the solution to the Leetcode problem 112. Path Sum. Given the root of a binary tree and an integer targetSum, return true if the tree has a root-to-leaf path such that adding up all the values along the path equals `target_sum`.
+pub fn has_path_sum(root: Option<Rc<RefCell<TreeNode>>>, target_sum: i32) -> bool {
+    has_path_sum_recursive(&root, target_sum)
+}
+
+fn has_path_sum_recursive(curr: &Option<Rc<RefCell<TreeNode>>>, target: i32) -> bool {
+    if let Some(node) = curr {
+        let curr_ref = node.borrow();
+        let target_new = target - curr_ref.val;
+        if curr_ref.left.is_none() && curr_ref.right.is_none() {
+            return target_new == 0;
+        } else {
+            return has_path_sum_recursive(&curr_ref.left, target_new) || has_path_sum_recursive(&curr_ref.right, target_new);
+        }
+    } else {
+        return false;
+    }
+}
+
 #[cfg(test)]
 mod test_module {
     use super::*;
@@ -613,5 +714,35 @@ mod test_module {
         let root = build_tree_postorder(i, p);
         let v = TreeNode::root_to_vec(&root);
         assert_eq!(v, vec![Some(7), Some(2), Some(6), Some(1), Some(3), Some(5), Some(4), None, Some(0), None, None, None, Some(9)])
+    }
+
+    #[test]
+    fn test_sorted_array_to_bst() {
+        let v = vec![-10,-3,0,5,9];
+        let root = sorted_array_to_bst(v);
+        let displayed = TreeNode::root_to_vec(&root);
+        println!("{displayed:?}");
+    }
+
+    #[test]
+    fn test_sorted_list_to_bst() {
+        let v = ListNode::from_vec(&[-10,-3,0,5,9]);
+        let root = sorted_list_to_bst(v);
+        let displayed = TreeNode::root_to_vec(&root);
+        println!("{displayed:?}");
+    }
+
+    #[test]
+    fn test_get_tree_height_min() {
+        let arr = [Some(3),Some(9),Some(20),None,None,Some(15),Some(7)];
+        let root = TreeNode::root_from_vec(&arr);
+        assert_eq!(min_depth(root), 2);
+    }
+
+    #[test]
+    fn test_get_tree_height_min_2() {
+        let arr = [Some(3),None,Some(9),None,Some(20),None,Some(15),Some(7)];
+        let root = TreeNode::root_from_vec(&arr);
+        assert_eq!(min_depth(root), 5);
     }
 }
