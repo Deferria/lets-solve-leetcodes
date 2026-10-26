@@ -5,7 +5,8 @@ use leetcodes::collections::TreeNode;
 
 /// Only some important debug would use the main function for better print and lint. Otherwise, run tests in the #[cfg(test)] mod tests in `sol.rs`.
 fn main() {
-    let arr = [Some(7), Some(2), Some(6), Some(1), Some(3), Some(5), Some(4), None, Some(0), None, None, None, Some(9)];
+    //let arr = [Some(7), Some(2), Some(6), Some(1), Some(3), Some(5), Some(4), None, Some(0), None, None, None, Some(9)];
+    let arr = [Some(1), Some(2), Some(3), Some(4), Some(5), Some(6), Some(7), Some(8), Some(9), Some(10), Some(11), Some(12), Some(13), Some(14), Some(15)];
     let root = TreeNode::root_from_vec(&arr);
     {
         let mut v1 = Vec::new();

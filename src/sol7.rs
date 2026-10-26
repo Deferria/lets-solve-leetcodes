@@ -488,14 +488,14 @@ fn is_balanced_inner(rt: &Option<Rc<RefCell<TreeNode>>>) -> i32 {
 
 /// This is the solution to the Leetcode problem 111. Minimum Depth of Binary Tree. Given a binary tree, find its minimum depth.
 pub fn min_depth(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
-    get_tree_height(&root)
+    get_tree_depth_min(&root)
 }
 
-fn get_tree_height(rt: &Option<Rc<RefCell<TreeNode>>>) -> i32 {
+fn get_tree_depth_min(rt: &Option<Rc<RefCell<TreeNode>>>) -> i32 {
     if let Some(node) = rt {
         let node_ref = node.borrow();
-        let n1 = get_tree_height(&node_ref.left);
-        let n2 = get_tree_height(&node_ref.right);
+        let n1 = get_tree_depth_min(&node_ref.left);
+        let n2 = get_tree_depth_min(&node_ref.right);
         if n1 == 0 && n2 == 0 {
             return 1;
         } else if n1 != 0 && n2 != 0 {
@@ -526,6 +526,58 @@ fn has_path_sum_recursive(curr: &Option<Rc<RefCell<TreeNode>>>, target: i32) -> 
         }
     } else {
         return false;
+    }
+}
+
+/// This is the solution to the Leetcode problem 113. Path Sum II. Given the root of a binary tree and an integer targetSum, return all root-to-leaf paths where each path's sum equals `target_sum`.
+pub fn path_sum(root: Option<Rc<RefCell<TreeNode>>>, target_sum: i32) -> Vec<Vec<i32>> {
+    let mut ans = Vec::new();
+    let mut temp = Vec::new();
+    path_sum_recursive(&root, target_sum, &mut ans, & mut temp);
+    ans
+}
+
+fn path_sum_recursive(rt: &Option<Rc<RefCell<TreeNode>>>, target_sum: i32, final_ans: &mut Vec<Vec<i32>>, curr_ans: &mut Vec<i32>) {
+    if let Some(node) = rt {
+        let curr = node.borrow();
+        curr_ans.push(curr.val);
+        let target_new = target_sum - curr.val;
+        match (curr.left.as_ref(), curr.right.as_ref()) {
+            (None, None) => {
+                if target_new == 0 {
+                    final_ans.push(curr_ans.to_vec());
+                }
+                curr_ans.pop();
+                return;
+            },
+            (ltree, rtree) => {
+                path_sum_recursive(&curr.left, target_new, final_ans, curr_ans);
+                path_sum_recursive(&curr.right, target_new, final_ans, curr_ans);
+                curr_ans.pop();
+            }
+        }
+    } else {
+        return;
+    }
+}
+/// This is the solution to the Leetcode problem 114. Flatten Binary Tree to Linked List. Given the root of a binary tree, flatten the tree into a "linked list" (left child is none, right child is the next node in the list) in-place.
+pub fn flatten(root: &mut Option<Rc<RefCell<TreeNode>>>) {
+    if let Some(node) = root {
+        let mut node_ref = node.borrow_mut();
+        flatten(&mut node_ref.left);
+        flatten(&mut node_ref.right);
+        drop(node_ref);
+        let mut prev = node.borrow_mut().left.clone();
+        while let Some(inner) = prev {
+            if inner.borrow().right.is_none() {
+                inner.borrow_mut().right = node.borrow().right.clone();
+                let mut node_ref = node.borrow_mut();
+                node_ref.right = node_ref.left.clone();
+                node_ref.left = None;
+                return;
+            }
+            prev = inner.borrow_mut().right.clone();
+        }
     }
 }
 
@@ -744,5 +796,25 @@ mod test_module {
         let arr = [Some(3),None,Some(9),None,Some(20),None,Some(15),Some(7)];
         let root = TreeNode::root_from_vec(&arr);
         assert_eq!(min_depth(root), 5);
+    }
+
+    #[test]
+    fn test_path_sum() {
+        let arr = [Some(1), Some(3), Some(2), Some(4), Some(5), Some(6), Some(7)];
+        let root = TreeNode::root_from_vec(&arr);
+        let ans = path_sum(root, 9);
+        println!("{ans:?}");
+    }
+
+    #[test]
+    fn test_flatten() {
+        let arr = [Some(1), Some(2), Some(5), Some(3), Some(4), None, Some(6)];
+        let mut root = TreeNode::root_from_vec(&arr);
+        flatten(&mut root);
+        /* let mut v1 = Vec::new();
+        preorder_traversal_recursive(&root, &mut v1);
+        dbg!(v1); */
+        let view = TreeNode::root_to_vec(&root);
+        println!("{view:?}");
     }
 }

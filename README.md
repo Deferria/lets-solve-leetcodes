@@ -12,6 +12,6 @@ All solutions are organized in the `src` directory:
 - `sol4.rs`: Problem 54-75;
 - `sol5.rs`: Problem 77-82, 84-86, 88-91, 93, 97, 135, 274;
 - `sol6.rs`: Problem 83, 92;
-- `sol7.rs`: (Dedicated for Binary Tree Problems) Problem 94-96, 98-107.
+- `sol7.rs`: (Dedicated for Binary Tree Problems) Problem 94-96, 98-114.
 
 **TO BE CONTINUED...**
