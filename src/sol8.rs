@@ -212,6 +212,38 @@ fn back_dfs(word: Rc<String>, target: Rc<String>, path: &mut Vec<String>, res: &
     }
 }
 
+/// This is the solution to leetcode problem 125. Valid Palindrome. It checks if a given string `s` is a palindrome, considering only alphabetic characters and ignoring cases.
+pub fn is_palindrome_1(s: String) -> bool {
+    let mut s_v = String::new();
+    for c in s.chars() {
+        if c.is_alphanumeric() {
+            s_v.push(c);
+        }
+    }
+    s_v = s_v.to_lowercase().to_string();
+    let s_c: Vec<char> = s_v.chars().collect();
+    if s_v.is_empty() {
+        return true;
+    }
+    let (mut l, mut r) = (0, s_c.len()-1);
+    while l < r {
+        if s_c[l] != s_c[r] {
+            return false;
+        }
+        l += 1;
+        r -= 1;
+    }
+    return true;
+}
+
+/// This is the solution to leetcode problem 125. Valid Palindrome. 
+/// 
+/// Here we use a mor concise and functional programming style to check.
+pub fn is_palindrome(s: String) -> bool {
+    let s_new: Vec<char> = String::from(s).chars().filter(|x| x.is_alphanumeric()).map(|x| x.to_ascii_lowercase()).collect();
+    return s_new == s_new.clone().into_iter().rev().collect::<Vec<char>>();
+}
+
 /// This is the solution to leetcode problem 126. Word Ladder II. It finds all shortest transformation sequences from `begin_word` to `end_word`, such that only one letter can be changed at a time and each transformed word must exist in the word list.
 /// 
 /// To avoid ownership issues, we use `Rc` pointer to store the words in data structures. 
@@ -222,9 +254,7 @@ pub fn find_ladders(begin_word: String, end_word: String, word_list: Vec<String>
     for i in word_list_2.into_iter() {
         word_set.insert(Rc::new(i));
     }
-    println!("{word_set:?}");
     if !word_set.contains(&end_word) {
-        //println!("1");
         return Vec::new();
     }
     let mut dists = HashMap::new();
@@ -242,7 +272,7 @@ pub fn find_ladders(begin_word: String, end_word: String, word_list: Vec<String>
         for _ in 0..n {
             let curr = q.pop_front().unwrap().clone();
             let curr_dist = *dists.get(&curr).unwrap();
-            println!("Pred_curr: {}", *curr);
+            //println!("Pred_curr: {}", *curr);
             if *curr == end_word {
                 found_flag = true;
                 continue;
@@ -259,7 +289,7 @@ pub fn find_ladders(begin_word: String, end_word: String, word_list: Vec<String>
                     let testing: String = v.iter().collect();
                     v[i] = temp_char;
                     let testing_rc = Rc::new(testing);
-                    println!("Pred_testing: {}", *testing_rc);
+                    //println!("Pred_testing: {}", *testing_rc);
                     if *testing_rc == end_word {
                         found_flag = true;
                         precedors.entry(testing_rc.clone()).or_insert(HashSet::new());
@@ -267,7 +297,7 @@ pub fn find_ladders(begin_word: String, end_word: String, word_list: Vec<String>
                         set.insert(curr.clone());
                     }
                     if word_set.contains(&testing_rc) {
-                        println!("into this branch");
+                        //println!("into this branch");
                         if !dists.contains_key(&testing_rc) {
                             dists.insert(testing_rc.clone(), curr_dist+1);
                             visited.insert(testing_rc.clone());
@@ -275,11 +305,91 @@ pub fn find_ladders(begin_word: String, end_word: String, word_list: Vec<String>
                             precedors.entry(testing_rc.clone()).or_insert(HashSet::new());
                             let set = precedors.get_mut(&testing_rc).unwrap();
                             set.insert(curr.clone());
-                        } else {
-                            if let Some(&val) = dists.get(&testing_rc) && val == curr_dist + 1 {
-                                precedors.entry(testing_rc.clone()).or_insert(HashSet::new());
-                                let set = precedors.get_mut(&testing_rc).unwrap();
-                                set.insert(curr.clone());
+                        } else if let Some(&val) = dists.get(&testing_rc) && val == curr_dist + 1 {
+                            precedors.entry(testing_rc.clone()).or_insert(HashSet::new());
+                            let set = precedors.get_mut(&testing_rc).unwrap();
+                            set.insert(curr.clone());
+                        }
+                    }
+                }
+            }
+        }
+        word_set.retain(|c| !visited.contains(c));
+    }
+    //println!("{dists:?}");
+    if !found_flag {
+        return Vec::new();
+    }
+    let mut ans: Vec<Vec<String>> = Vec::new();
+    let mut path = vec![end_word.clone()];
+    back_dfs(Rc::new(end_word), begin_word_rc, &mut path, &mut ans, &precedors);
+    ans
+}
+
+/// This is the solution to leetcode problem 127. Word Ladder. It finds the shortest length of the shortest transformation sequence from `begin_word` to `end_word`, such that only one letter can be changed at a time and each transformed word must exist in the word list.
+/// 
+/// It mostly take after the solution to problem 126, but this time we store the candidate words before testing, by which we can avoid calculate the hash of the new string every time even though it only alters one character. This is a trade-off between time and space complexity.
+pub fn ladder_length(begin_word: String, end_word: String, word_list: Vec<String>) -> i32 {
+    let l = begin_word.len();
+    let word_list_2 = word_list.clone();
+    let begin_word_rc = Rc::new(begin_word);
+    let mut word_set: HashSet<Rc<String>> = HashSet::new();
+    for i in word_list_2.into_iter() {
+        word_set.insert(Rc::new(i));
+    }
+    if !word_set.contains(&end_word) {
+        return 0;
+    }
+    let mut dists = HashMap::new();
+    let mut barrel = HashMap::new();
+    for w in word_set.iter() {
+        let mut v: Vec<char> = w.chars().collect();
+        for i in 0..l {
+            let temp_char = v[i];
+            v[i] = '*';
+            let temp_str: Rc<String> = Rc::new(v.iter().collect());
+            let val = barrel.entry(temp_str).or_insert(Vec::new());
+            val.push((*w).clone());
+            v[i] = temp_char
+        }
+    }
+    dists.insert(begin_word_rc.clone(), 0);
+    let mut q = VecDeque::new();
+    q.push_back(begin_word_rc.clone());
+    if word_set.contains(&begin_word_rc) {
+        word_set.remove(&begin_word_rc);
+    }
+    let mut found_flag = false;
+    while !q.is_empty() && !found_flag {
+        let mut visited: HashSet<Rc<String>> = HashSet::new();
+        let n = q.len();
+        for _ in 0..n {
+            let curr = q.pop_front().unwrap().clone();
+            let curr_dist = *dists.get(&curr).unwrap();
+            if *curr == end_word {
+                found_flag = true;
+                continue;
+            }
+            let mut v: Vec<char> = curr.chars().collect();
+            for i in 0..l {
+                let temp_char = v[i];
+                v[i] = '*';
+                let ptn: Rc<String> = Rc::new(v.iter().collect());
+                v[i] = temp_char;
+                if let Some(testings) = barrel.get(&ptn) {
+                    for testing in testings.into_iter() {
+                        if *testing == curr {
+                            continue;
+                        }
+                        let testing_rc = (*testing).clone();
+                        if *testing_rc == end_word {
+                            found_flag = true;
+                        }
+                        if word_set.contains(&testing_rc) {
+                            if !dists.contains_key(&testing_rc) {
+                                dists.insert(testing_rc.clone(), curr_dist+1);
+                                visited.insert(testing_rc.clone());
+                                q.push_back(testing_rc.clone());
                             }
                         }
                     }
@@ -288,13 +398,103 @@ pub fn find_ladders(begin_word: String, end_word: String, word_list: Vec<String>
         }
         word_set.retain(|c| !visited.contains(c));
     }
-    if !found_flag {
-        return Vec::new();
+    return if let Some(d) = dists.get(&end_word) { d + 1 } else { 0 };
+}
+
+/// This is the solution to leetcode problem 128. Longest Consecutive Sequence. 
+pub fn longest_consecutive(nums: Vec<i32>) -> i32 {
+    let mut record = HashSet::new();
+    for i in nums.iter() {
+        record.insert(*i);
     }
-    let mut ans: Vec<Vec<String>> = Vec::new();
-    let mut path = vec![end_word.clone()];
-    back_dfs(Rc::new(end_word), begin_word_rc, &mut path, &mut ans, &precedors);
+    let mut res = 0;
+    for val in nums.into_iter() {
+        let mut temp_val1 = val;
+        while record.remove(&temp_val1) {
+            temp_val1 += 1;
+        }
+        let mut temp_val2 = val-1;
+        while record.remove(&temp_val2) {
+            temp_val2 -= 1;
+        }
+        res = res.max(temp_val1-temp_val2-1);
+    }
+    res
+}
+
+fn board_bfs(board: &mut Vec<Vec<char>>, pm: isize, pn: isize) {
+    let (m, n) = (board.len(), board[0].len());
+    // constraint checker
+    if pm < 0 || pm >= m as isize || pn < 0 || pn >= n as isize {
+        return;
+    }
+    if board[pm as usize][pn as usize] == 'O' {
+        board[pm as usize][pn as usize] = '-';
+        board_bfs(board, pm-1, pn);
+        board_bfs(board, pm+1, pn);
+        board_bfs(board, pm, pn-1);
+        board_bfs(board, pm, pn+1);
+    } else {
+        return;
+    }
+}
+
+/// This is the solution to leetcode problem 130. Surrounded Regions. It uses BFS to find all 'O's that are connected to the border and marks them as '-'. Then it flips all remaining 'O's to 'X' and flips '-' back to 'O'.
+pub fn solve(board: &mut Vec<Vec<char>>) {
+    let (m, n) = (board.len() as isize, board[0].len() as isize);
+    for pi in 0..n {
+        board_bfs(board, 0, pi);
+        board_bfs(board, m-1, pi);
+    }
+    for pj in 1..(m-1) {
+        board_bfs(board, pj, 0);
+        board_bfs(board, pj, n-1);
+    }
+    for row in board.iter_mut() {
+        for c in row.iter_mut() {
+            if *c == 'O' {
+                *c = 'X';
+            } else if *c == '-' {
+                *c = 'O';
+            }
+        }
+    }
+}
+
+/// This is the solution to leetcode problem 131. Palindrome Partitioning. It partitions a string into substrings such that each substring is a palindrome.
+pub fn partition(s: String) -> Vec<Vec<String>> {
+    let s_v = s.chars().collect();
+    let mut res = Vec::new();
+    let mut ans = Vec::new();
+    partition_backtracking(&s_v, 0, &mut res, &mut ans);
     ans
+}
+
+fn is_palindrome_fast(a: &Vec<char>, p1: usize, p2: usize) -> bool {
+    let (mut p, mut q) = (p1, p2);
+    while p < q {
+        if a[p] != a[q] {
+            return false;
+        }
+        p += 1;
+        q -= 1;
+    }
+    return true;
+}
+
+fn partition_backtracking(s: &Vec<char>, ind: usize, res: &mut Vec<String>, ans: &mut Vec<Vec<String>>) {
+    if ind == s.len() {
+        ans.push(res.to_vec());
+        return;
+    }
+    for i in ind..s.len() {
+        if is_palindrome_fast(s, ind, i) {
+            let temp: String = (&s[ind..=i]).iter().collect();
+            res.push(temp);
+            partition_backtracking(s, i+1, res, ans);
+            res.pop();
+        }
+    }
 }
 
 #[cfg(test)]
@@ -393,5 +593,37 @@ mod test_module {
         let wd_list_prev: Vec<String> = vec!["hot".into(),"dot".into(),"dog".into(),"lot".into(),"log".into(),"cog".into()].into_iter().collect();
         let res = find_ladders("hit".into(), "cog".into(), wd_list_prev);
         println!("{res:?}");
+    }
+
+    #[test]
+    fn test_word_ladder_length() {
+        let wd_list_prev: Vec<String> = vec!["hot".into(),"dot".into(),"dog".into(),"lot".into(),"log".into(),"cog".into()].into_iter().collect();
+        let res = ladder_length("hit".into(), "cog".into(), wd_list_prev);
+        assert_eq!(res, 5);
+    }
+
+    #[test]
+    fn test_longest_consecutive_sequence() {
+        let for_testing = vec![100, 4, 200, 1, 3, 2];
+        assert_eq!(longest_consecutive(for_testing), 4)
+    }
+
+    #[test]
+    fn test_surrounding_regions() {
+        let mut bd = vec![
+            vec!['X', 'X', 'X', 'X'],
+            vec!['X', 'O', 'O', 'X'],
+            vec!['X', 'X', 'O', 'X'],
+            vec!['X', 'O', 'X', 'X']
+        ];
+        solve(&mut bd);
+        println!("{bd:?}");
+    }
+
+    #[test]
+    fn test_palindrome_partition() {
+        let for_testing = String::from("aab");
+        let ans = partition(for_testing);
+        println!("{ans:?}");
     }
 }

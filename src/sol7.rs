@@ -581,6 +581,27 @@ pub fn flatten(root: &mut Option<Rc<RefCell<TreeNode>>>) {
     }
 }
 
+/// This is the solution to the Leetcode problem 129. Sum Root to Leaf Numbers. Given the root of a binary tree containing digits from 0-9 only, each root-to-leaf path represents a number. Return the total sum of all root-to-leaf numbers.
+pub fn sum_numbers(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
+    let mut ans = Vec::new();
+    sum_number_recording(&root, 0, &mut ans);
+    //println!("{ans:?}");
+    return ans.iter().sum();
+}
+
+fn sum_number_recording(root: &Option<Rc<RefCell<TreeNode>>>, prev: i32, record: &mut Vec<i32>) {
+    if let Some(node) = root {
+        let node_ref = node.borrow();
+        let val_new = prev * 10 + node_ref.val;
+        if node_ref.left.as_ref().is_none() && node_ref.right.as_ref().is_none() {
+            record.push(val_new);
+            return;
+        }
+        sum_number_recording(&node_ref.left, val_new, record);
+        sum_number_recording(&node_ref.right, val_new, record);
+    }
+}
+
 #[cfg(test)]
 mod test_module {
     use super::*;
@@ -816,5 +837,13 @@ mod test_module {
         dbg!(v1); */
         let view = TreeNode::root_to_vec(&root);
         println!("{view:?}");
+    }
+
+    #[test]
+    fn test_sum_number() {
+        let arr = [Some(1), Some(2), Some(3)];
+        let root = TreeNode::root_from_vec(&arr);
+        let v = sum_numbers(root);
+        assert_eq!(v, 25);
     }
 }
